@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{37E84BEB-59E4-4966-850C-78590439F1AD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HyperMapper", "src\HyperMapper\HyperMapper.csproj", "{9BDBB200-6E65-4550-B7EF-451F8C9E6C21}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9BDBB200-6E65-4550-B7EF-451F8C9E6C21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BDBB200-6E65-4550-B7EF-451F8C9E6C21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BDBB200-6E65-4550-B7EF-451F8C9E6C21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BDBB200-6E65-4550-B7EF-451F8C9E6C21}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9BDBB200-6E65-4550-B7EF-451F8C9E6C21} = {37E84BEB-59E4-4966-850C-78590439F1AD}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {156C78B8-03AB-4366-A4AD-5FA2CF1DDD64}
+	EndGlobalSection
+EndGlobal

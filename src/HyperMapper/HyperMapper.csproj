@@ -1,33 +1,35 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>NET47</TargetFrameworks>
-        <!--<TargetFrameworks>netstandard2.0;NET47</TargetFrameworks>-->
+        <!--<TargetFrameworks>netstandard2.0;net47</TargetFrameworks>-->
+
+        <TargetFrameworks>net47</TargetFrameworks>
         <Configurations>Debug;Release;</Configurations>
         <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>opensource.snk</AssemblyOriginatorKeyFile>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU' AND '$(TargetFramework)'=='NET47'">
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU' AND '$(TargetFramework)'=='net47'">
         <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
         <DefineConstants>TRACE;DEBUG;NETSTANDARD;NETSTANDARD2_0;NETSTANDARD2_0;NET47</DefineConstants>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU' AND '$(TargetFramework)'!='NET47'">
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU' AND '$(TargetFramework)'!='net47'">
         <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
         <DefineConstants>TRACE;DEBUG;NETSTANDARD;NETSTANDARD2_0;NETSTANDARD2_0;</DefineConstants>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU' AND '$(TargetFramework)'=='NET47'">
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU' AND '$(TargetFramework)'=='net47'">
         <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
         <DefineConstants>RELEASE;NETSTANDARD;NETSTANDARD2_0;NET47</DefineConstants>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU' AND '$(TargetFramework)'!='NET47'">
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU' AND '$(TargetFramework)'!='net47'">
         <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
         <DefineConstants>RELEASE;NETSTANDARD;NETSTANDARD2_0</DefineConstants>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -42,12 +44,16 @@
         <NoWarn>1701;1702;1705;1591</NoWarn>
     </PropertyGroup>
 
-    <ItemGroup>
-      <Folder Include="Internal\Emit\" />
+    <!--<ItemGroup>
+        <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+        <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.4.0" />
+        <PackageReference Include="System.ValueTuple" Version="4.4.0" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-    </ItemGroup>
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net47' ">
+        <PackageReference Include="System.ValueTuple" Version="4.4.0" />
+    </ItemGroup>-->
+
 
 </Project>
