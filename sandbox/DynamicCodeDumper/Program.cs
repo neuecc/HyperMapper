@@ -20,7 +20,14 @@ namespace DynamicCodeDumper
             {
                 var info = MappingInfo.Create<MyClassA, MyClassB>();
                 info.BeforeMap = x => Console.WriteLine(x.MyProperty);
-                // info.AfterMap = x => Console.WriteLine(x.MyProperty);
+                info.AfterMap = x => Console.WriteLine(x.MyProperty3);
+
+                // info.AddMap(x => x.MyProperty, x => x.MyPropertyNano, x => x);
+                info.AddMap(x => x.MyProperty, x => x.MyProperty3, x => x);
+                info.AddUse(x => x.DT, _ => DateTime.Now);
+
+                // info.WithConvertAction(x => x.MyProperty, x => x.MyProperty, x => new MyClassC());
+
 
                 info.BuildMapper();
 
@@ -60,14 +67,16 @@ namespace DynamicCodeDumper
         }
     }
 
-    public struct MyClassA
+    public class MyClassA
     {
         public MyClassC MyProperty { get; set; }
     }
 
     public struct MyClassB
     {
-        public MyClassC MyProperty { get; set; }
+        public int MyPropertyNano { get; set; }
+        public MyClassC MyProperty3 { get; set; }
+        public DateTime DT { get; set; }
     }
 
     public class MyClassC

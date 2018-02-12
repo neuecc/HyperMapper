@@ -153,48 +153,50 @@ namespace HyperMapper
             return this;
         }
 
-        // TODO:not yet implemented
+        public MappingInfo<TFrom, TTo> ClearAllMap()
+        {
+            TargetMembers = new MetaMemberPair<TFrom, TTo>[0];
+            return this;
+        }
+
         public MappingInfo<TFrom, TTo> AddMap<TFromMember, TToMember>(Expression<Func<TFrom, TFromMember>> from, Expression<Func<TTo, TToMember>> to)
         {
-            // var memberExpression = memberSelector.Body as MemberExpression;
-            //var member = memberExpression.Member;
-
-            //TargetMembers = TargetMembers.Where(x => x.To.MemberInfo != member).ToArray();
-            //return this;
-            throw new NotImplementedException();
+            return AddMap(from, to, null);
         }
 
         public MappingInfo<TFrom, TTo> AddMap<TFromMember, TToMember>(Expression<Func<TFrom, TFromMember>> from, Expression<Func<TTo, TToMember>> to, Func<TFromMember, TToMember> convertAction)
         {
-            // var memberExpression = memberSelector.Body as MemberExpression;
-            //var member = memberExpression.Member;
+            var fromMember = (from.Body as MemberExpression).Member;
+            var fromMeta = FromAllMembers.FirstOrDefault(x => x.MemberInfo == fromMember);
 
-            //TargetMembers = TargetMembers.Where(x => x.To.MemberInfo != member).ToArray();
-            //return this;
-            throw new NotImplementedException();
+            var toMember = (to.Body as MemberExpression).Member;
+            var toMeta = ToAllMembers.FirstOrDefault(x => x.MemberInfo == toMember);
+
+            if (fromMeta == null) throw new ArgumentException("from member expression can't find mappable member(mapper can target first hierarchy only). " + from.ToString());
+            if (toMeta == null) throw new ArgumentException("to member expression can't find mappable member(mapper can target first hierarchy only). " + to.ToString());
+
+            // for distinct, first as new pair.
+            TargetMembers = new[] { new MetaMemberPair<TFrom, TTo>(fromMeta, toMeta, convertAction) }.Concat(TargetMembers).Distinct().ToArray();
+            return this;
         }
 
-        public MappingInfo<TFrom, TTo> AddMap<TToMember>(Expression<Func<TTo, TToMember>> to, Func<TToMember> convertAction)
+        public MappingInfo<TFrom, TTo> AddUse<TToMember>(Expression<Func<TTo, TToMember>> to, Func<TFrom, TToMember> convertAction)
         {
-            // var memberExpression = memberSelector.Body as MemberExpression;
-            //var member = memberExpression.Member;
+            var toMember = (to.Body as MemberExpression).Member;
+            var toMeta = ToAllMembers.FirstOrDefault(x => x.MemberInfo == toMember);
 
-            //TargetMembers = TargetMembers.Where(x => x.To.MemberInfo != member).ToArray();
-            //return this;
-            throw new NotImplementedException();
+            if (toMeta == null) throw new ArgumentException("to member expression can't find mappable member(mapper can target first hierarchy only). " + to.ToString());
+
+            // for distinct, first as new pair.
+            TargetMembers = new[] { new MetaMemberPair<TFrom, TTo>(null, toMeta, convertAction) }.Concat(TargetMembers).Distinct().ToArray();
+            return this;
         }
 
-        // same as AddMap:)
+        /// <summary>Same as AddMap</summary>
         public MappingInfo<TFrom, TTo> WithConvertAction<TFromMember, TToMember>(Expression<Func<TFrom, TFromMember>> from, Expression<Func<TTo, TToMember>> to, Func<TFromMember, TToMember> convertAction)
         {
-            // var memberExpression = memberSelector.Body as MemberExpression;
-            //var member = memberExpression.Member;
-
-            //TargetMembers = TargetMembers.Where(x => x.To.MemberInfo != member).ToArray();
-            //return this;
-            throw new NotImplementedException();
+            return AddMap(from, to, convertAction);
         }
-
 
         public IObjectMapper<TFrom, TTo> BuildMapper()
         {
@@ -213,22 +215,34 @@ namespace HyperMapper
         }
     }
 
-    public class MetaMemberPair<TFrom, TTo>
+    public class MetaMemberPair<TFrom, TTo> : IEquatable<MetaMemberPair<TFrom, TTo>>
     {
         public MetaMember<TFrom> From { get; }
         public MetaMember<TTo> To { get; }
-        public Func<TFrom, TTo> ConvertAction { get; }
+
+        /// <summary>Func[TFromMember, TToMember] or Func[TFrom, TToMember]</summary>
+        public object ConvertAction { get; }
 
         public MetaMemberPair(MetaMember<TFrom> from, MetaMember<TTo> to)
             : this(from, to, null)
         {
         }
 
-        public MetaMemberPair(MetaMember<TFrom> from, MetaMember<TTo> to, Func<TFrom, TTo> convertAction)
+        public MetaMemberPair(MetaMember<TFrom> from, MetaMember<TTo> to, object convertAction)
         {
             From = from;
             To = to;
             ConvertAction = convertAction;
+        }
+
+        public override int GetHashCode()
+        {
+            return (From?.MemberInfo, To?.MemberInfo).GetHashCode();
+        }
+
+        public bool Equals(MetaMemberPair<TFrom, TTo> other)
+        {
+            return (From == other.From && To == other.To);
         }
     }
 }

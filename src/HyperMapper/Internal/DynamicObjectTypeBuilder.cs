@@ -144,15 +144,18 @@ namespace HyperMapper.Internal
 
             FieldBuilder beforeMapField = null;
             FieldBuilder afterMapField = null;
+            Dictionary<MetaMemberPair<TFrom, TTo>, FieldBuilder> convertActionDictionary = null;
 
-            // ctor(Action<TFrom> beforeMap, Action<TTo> afterMap);
+            var ctorConvertActions = mappingInfo.TargetMembers.Where(x => x.ConvertAction != null).ToArray();
+
+            // ctor(Action<TFrom> beforeMap, Action<TTo> afterMap, convertActions, ...,);
             {
-                var method = typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, new[] { typeof(Action<TFrom>), typeof(Action<TTo>) });
+                var method = typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, new[] { typeof(Action<TFrom>), typeof(Action<TTo>) }.Concat(ctorConvertActions.Select(_ => typeof(object))).ToArray());
                 var il = method.GetILGenerator();
                 beforeMapField = typeBuilder.DefineField("beforeMap", typeof(Action<TFrom>), FieldAttributes.Private | FieldAttributes.InitOnly);
                 afterMapField = typeBuilder.DefineField("afterMap", typeof(Action<TTo>), FieldAttributes.Private | FieldAttributes.InitOnly);
 
-                BuildConstructor(il, mappingInfo, beforeMapField, afterMapField);
+                BuildConstructor(il, mappingInfo, beforeMapField, afterMapField, typeBuilder, ctorConvertActions, out convertActionDictionary);
             }
 
             // TTo Map(TFrom from, IObjectMapperResolver resolver);
@@ -169,16 +172,14 @@ namespace HyperMapper.Internal
                 {
                     il.EmitLoadThis();
                     il.EmitLdfld(afterMapField);
-                }, () =>
-                {
-                });
+                }, convertActionDictionary);
             }
 
             var typeInfo = typeBuilder.CreateTypeInfo();
-            return Activator.CreateInstance(typeInfo, new object[] { mappingInfo.BeforeMap, mappingInfo.AfterMap });
+            return Activator.CreateInstance(typeInfo, new object[] { mappingInfo.BeforeMap, mappingInfo.AfterMap }.Concat(ctorConvertActions).ToArray());
         }
 
-        static void BuildConstructor<TFrom, TTo>(ILGenerator il, MappingInfo<TFrom, TTo> mappingInfo, FieldBuilder beforeMapField, FieldBuilder afterMapField)
+        static void BuildConstructor<TFrom, TTo>(ILGenerator il, MappingInfo<TFrom, TTo> mappingInfo, FieldBuilder beforeMapField, FieldBuilder afterMapField, TypeBuilder typeBuilder, MetaMemberPair<TFrom, TTo>[] convertActions, out Dictionary<MetaMemberPair<TFrom, TTo>, FieldBuilder> convertActionDictionary)
         {
             il.EmitLdarg(0);
             il.Emit(OpCodes.Call, EmitInfo.ObjectCtor);
@@ -197,10 +198,23 @@ namespace HyperMapper.Internal
                 il.Emit(OpCodes.Stfld, afterMapField);
             }
 
+            convertActionDictionary = new Dictionary<MetaMemberPair<TFrom, TTo>, FieldBuilder>(convertActions.Length);
+            var loadIndex = 3;
+            foreach (var item in convertActions)
+            {
+                var field = typeBuilder.DefineField("convertAction" + loadIndex, typeof(object), FieldAttributes.Private | FieldAttributes.InitOnly);
+
+                il.EmitLoadThis();
+                il.EmitLdarg(loadIndex++);
+                il.Emit(OpCodes.Stfld, field);
+
+                convertActionDictionary.Add(item, field);
+            }
+
             il.Emit(OpCodes.Ret);
         }
 
-        static void BuildMap<TFrom, TTo>(ILGenerator il, MappingInfo<TFrom, TTo> mappingInfo, int firstArgIndex, Action emitBeforeMapLoadDelegate, Action emitAfterMapLoadDelegate, Action emitLoadConvertAction)
+        static void BuildMap<TFrom, TTo>(ILGenerator il, MappingInfo<TFrom, TTo> mappingInfo, int firstArgIndex, Action emitBeforeMapLoadDelegate, Action emitAfterMapLoadDelegate, Dictionary<MetaMemberPair<TFrom, TTo>, FieldBuilder> convertActionDictionary)
         {
             var fromType = typeof(TFrom);
             var toType = typeof(TTo);
@@ -220,9 +234,10 @@ namespace HyperMapper.Internal
             var result = EmitNewObject<TFrom, TTo>(il, argFrom, mappingInfo.TargetConstructor);
 
             // map from -> to.
+
             foreach (var item in mappingInfo.TargetMembers)
             {
-                EmitMapMember(il, item, argFrom, argResolver, result);
+                EmitMapMember(il, item, argFrom, argResolver, result, convertActionDictionary);
             }
 
             // call afterMap
@@ -280,14 +295,11 @@ namespace HyperMapper.Internal
             return result;
         }
 
-        static void EmitMapMember<TFrom, TTo>(ILGenerator il, MetaMemberPair<TFrom, TTo> pair, ArgumentField argFrom, ArgumentField argResolver, LocalBuilder toLocal)
+        static void EmitMapMember<TFrom, TTo>(ILGenerator il, MetaMemberPair<TFrom, TTo> pair, ArgumentField argFrom, ArgumentField argResolver, LocalBuilder toLocal, Dictionary<MetaMemberPair<TFrom, TTo>, FieldBuilder> convertFields)
         {
-            // var member = info.MemberInfo;
-            var toType = typeof(TTo);
-
-            if (primitiveTypes.Contains(pair.To.Type))
+            if (pair.From == null)
             {
-                // TODO:ConvertAction
+                // To and conversion pattern(Func<TFrom, TFromMember>).
                 if (toLocal.LocalType.IsValueType)
                 {
                     il.EmitLdloca(toLocal);
@@ -296,28 +308,80 @@ namespace HyperMapper.Internal
                 {
                     il.EmitLdloc(toLocal);
                 }
-                argFrom.EmitLoad();
-                pair.From.EmitLoadValue(il);
+
+                // note: if use DynamicMethod, should change field to argument.
+
+                // Func[TFrom, TToMember]
+                var convertField = convertFields[pair];
+                il.EmitLoadThis();
+                il.EmitLdfld(convertField);
+                il.Emit(OpCodes.Castclass, typeof(Func<,>).MakeGenericType(typeof(TFrom), pair.To.Type));
+                argFrom.EmitLdarg();
+                il.EmitCall(EmitInfo.GetFuncInvokeDynamic(typeof(TFrom), pair.To.Type));
                 pair.To.EmitStoreValue(il);
             }
             else
             {
-                // TODO:ConvertAction
-                if (toLocal.LocalType.IsValueType)
+                if (primitiveTypes.Contains(pair.To.Type))
                 {
-                    il.EmitLdloca(toLocal);
+                    if (toLocal.LocalType.IsValueType)
+                    {
+                        il.EmitLdloca(toLocal);
+                    }
+                    else
+                    {
+                        il.EmitLdloc(toLocal);
+                    }
+
+                    if (convertFields.TryGetValue(pair, out var convertField))
+                    {
+                        il.EmitLoadThis();
+                        il.EmitLdfld(convertField);
+                        il.Emit(OpCodes.Castclass, typeof(Func<,>).MakeGenericType(pair.From.Type, pair.To.Type));
+                    }
+
+                    argFrom.EmitLoad();
+                    pair.From.EmitLoadValue(il);
+
+                    if (convertField != null)
+                    {
+                        il.EmitCall(EmitInfo.GetFuncInvokeDynamic(pair.From.Type, pair.To.Type));
+                    }
+
+                    pair.To.EmitStoreValue(il);
                 }
                 else
                 {
-                    il.EmitLdloc(toLocal);
+                    if (toLocal.LocalType.IsValueType)
+                    {
+                        il.EmitLdloca(toLocal);
+                    }
+                    else
+                    {
+                        il.EmitLdloc(toLocal);
+                    }
+
+                    if (convertFields.TryGetValue(pair, out var convertField))
+                    {
+                        il.EmitLoadThis();
+                        il.EmitLdfld(convertField);
+                        il.Emit(OpCodes.Castclass, typeof(Func<,>).MakeGenericType(pair.From.Type, pair.To.Type));
+                    }
+
+                    argResolver.EmitLoad();
+                    il.EmitCall(EmitInfo.GetGetMapperWithVerifyDynamic(pair.From.Type, pair.To.Type));
+                    argFrom.EmitLoad();
+                    pair.From.EmitLoadValue(il);
+                    argResolver.EmitLoad();
+                    il.EmitCall(EmitInfo.GetMapDynamic(pair.From.Type, pair.To.Type));
+
+                    if (convertField != null)
+                    {
+                        il.EmitCall(EmitInfo.GetFuncInvokeDynamic(pair.From.Type, pair.To.Type));
+                    }
+
+                    pair.To.EmitStoreValue(il);
                 }
-                argResolver.EmitLoad();
-                il.EmitCall(EmitInfo.GetGetMapperWithVerifyDynamic(pair.From.Type, pair.To.Type));
-                argFrom.EmitLoad();
-                pair.From.EmitLoadValue(il);
-                argResolver.EmitLoad();
-                il.EmitCall(EmitInfo.GetMapDynamic(pair.From.Type, pair.To.Type));
-                pair.To.EmitStoreValue(il);
             }
         }
 
@@ -330,6 +394,9 @@ namespace HyperMapper.Internal
             public static MethodInfo GetGetMapperWithVerifyDynamic(Type tfrom, Type tTo) => typeof(ObjectMapperResolverExtensions).GetMethod(nameof(ObjectMapperResolverExtensions.GetMapperWithVerify)).MakeGenericMethod(tfrom, tTo);
             public static MethodInfo GetMap<TFrom, TTo>() => ExpressionUtility.GetMethodInfo((IObjectMapper<TFrom, TTo> mapper) => mapper.Map(default(TFrom), default(IObjectMapperResolver)));
             public static MethodInfo GetMapDynamic(Type tfrom, Type tTo) => typeof(IObjectMapper<,>).MakeGenericType(tfrom, tTo).GetMethod("Map");
+
+            public static MethodInfo GetFuncInvoke<T1, T2>() => ExpressionUtility.GetMethodInfo((Func<T1, T2> f) => f.Invoke(default(T1)));
+            public static MethodInfo GetFuncInvokeDynamic(Type t1, Type t2) => typeof(Func<,>).MakeGenericType(t1, t2).GetMethod("Invoke");
         }
     }
 }
