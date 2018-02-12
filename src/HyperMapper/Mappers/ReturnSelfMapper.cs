@@ -3,7 +3,7 @@
     /// <summary>
     /// Return self for struct or immutable object.
     /// </summary>
-    public class ReturnSelfMapper<T> : IObjectMapper<T, T>
+    public sealed class ReturnSelfMapper<T> : IObjectMapper<T, T>
     {
         public T Map(T obj, IObjectMapperResolver resolver)
         {
@@ -14,7 +14,7 @@
     /// <summary>
     /// Return self for immutable object and TTo : TFrom cast.
     /// </summary>
-    public class ReturnSelfMapper<TFrom, TTo> : IObjectMapper<TFrom, TTo>
+    public sealed class ReturnSelfMapper<TFrom, TTo> : IObjectMapper<TFrom, TTo>
         where TTo : TFrom
     {
         public TTo Map(TFrom obj, IObjectMapperResolver resolver)

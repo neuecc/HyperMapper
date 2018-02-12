@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 using System.Text;
 using System.Collections;
 using System.Dynamic;
+using System.Collections.ObjectModel;
 
 namespace HyperMapper.Resolvers
 {
-    public class BuiltinResolver : IObjectMapperResolver
+    public sealed class BuiltinResolver : IObjectMapperResolver
     {
         public static IObjectMapperResolver Instance = new BuiltinResolver();
 
@@ -136,6 +137,31 @@ namespace HyperMapper.Resolvers
                 {typeof(ExpandoObject), new ExpandoObjectMapper() },
             };
 
+            static readonly Dictionary<Type, Type> genericMapperMap = new Dictionary<Type, Type>
+            {
+                { typeof(KeyValuePair<,>), typeof(KeyValuePairMapper<,>) }
+                // TODO:...etc...
+
+                // TODO:...Grouping...Lookup...
+            };
+
+            static readonly Dictionary<Type, (Type sameType, Type fromEnumerable)> collectionMapperMap = new Dictionary<Type, (Type, Type)>
+            {
+                { typeof(IEnumerable<>), (typeof(EnumerableMapper<,>), typeof(EnumerableMapper<,,>)) },
+                { typeof(ArraySegment<>), (typeof(ArraySegmentMapper<,>), typeof(ArraySegmentMapper<,,>)) },
+                { typeof(List<>), (typeof(ListMapper<,>), typeof(ListMapper<,,>)) },
+                { typeof(LinkedList<>), (typeof(LinkedListMapper<,>), typeof(LinkedListMapper<,,>)) },
+                { typeof(Queue<>), (typeof(QueueMapper<,>), typeof(QueueMapper<,,>)) },
+                { typeof(Stack<>), (typeof(StackMapper<,>), typeof(StackMapper<,,>)) },
+                { typeof(HashSet<>), (typeof(HashSetMapper<,>), typeof(HashSetMapper<,,>)) },
+                { typeof(ReadOnlyCollection<>), (typeof(ReadOnlyCollectionMapper<,>), typeof(ReadOnlyCollectionMapper<,,>)) },
+                { typeof(IList<>), (typeof(InterfaceListMapper<,>), typeof(InterfaceListMapper<,,>)) },
+                { typeof(ICollection<>), (typeof(InterfaceCollectionMapper<,>), typeof(InterfaceCollectionMapper<,,>)) },
+            };
+
+            // TODO:GenericCollectionMapper
+
+
             public static object CreateMapper(Type from, Type to)
             {
                 var mapper = TryCreateNullableMapper(from, to);
@@ -161,12 +187,12 @@ namespace HyperMapper.Resolvers
 
                     mapper = TryCreateTupleMapper(from, to);
                     if (mapper != null) return mapper;
-
-                    mapper = TryCreateCollectionMapper(from, to);
-                    if (mapper != null) return mapper;
                 }
 
                 // allow not same...
+                mapper = TryCreateCollectionMapper(from, to);
+                if (mapper != null) return mapper;
+
                 mapper = TryCreateExceptionMapper(from, to);
                 if (mapper != null) return mapper;
 
@@ -257,18 +283,94 @@ namespace HyperMapper.Resolvers
             {
                 // KVP<TKey,TValue>, Lazy<T>, Task<T>, ValueTask<T>
 
-                throw new NotImplementedException();
+                // TODO:throw new NotImplementedException();
+                return null;
             }
 
             static object TryCreateTupleMapper(Type from, Type to)
             {
                 // Tuple or ValueTuple
-                throw new NotImplementedException();
+
+                // TODO:throw new NotImplementedException();
+                return null;
             }
 
             static object TryCreateCollectionMapper(Type from, Type to)
             {
-                throw new NotImplementedException();
+                if (from.IsArray && to.IsArray)
+                {
+                    var rank = from.GetArrayRank();
+                    if (rank != to.GetArrayRank())
+                    {
+                        return null; // not supported built-in(different rank matching)
+                    }
+
+                    if (rank == 1)
+                    {
+                        return Activator.CreateInstance(typeof(ArrayMapper<,>).MakeGenericType(from, to));
+                    }
+                    else if (rank == 2)
+                    {
+                        // TODO:multidimentional array
+                        throw new NotImplementedException();
+                        // return Activator.CreateInstance(typeof(TwoDimentionalArrayFormatter<>).MakeGenericType(t.GetElementType()));
+                    }
+                    else if (rank == 3)
+                    {
+                        // TODO:multidimentional array
+                        throw new NotImplementedException();
+                        // return Activator.CreateInstance(typeof(ThreeDimentionalArrayFormatter<>).MakeGenericType(t.GetElementType()));
+                    }
+                    else if (rank == 4)
+                    {
+                        // TODO:multidimentional array
+                        throw new NotImplementedException();
+                        // return Activator.CreateInstance(typeof(FourDimentionalArrayFormatter<>).MakeGenericType(t.GetElementType()));
+                    }
+                    else
+                    {
+                        throw new NotSupportedException("Rank > 4 multi dimentional array does not supported.");
+                    }
+                }
+                else if (to.IsArray)
+                {
+                    var fromElement = CollectionHelper.GetEnumerableElement(from);
+                    if (fromElement != null)
+                    {
+                        return Activator.CreateInstance(typeof(ArrayMapper<,,>).MakeGenericType(from, fromElement, to.GetElementType()));
+                    }
+
+                    return null;
+                }
+
+                if (to.IsGenericType)
+                {
+                    if (!from.IsArray && !from.IsGenericType) throw new NotSupportedException("NonGenericCollection to GenericCollection does not supported.");
+
+                    // generic collection
+                    var fromDef = (from.IsArray) ? null : from.GetGenericTypeDefinition();
+                    var toDef = to.GetGenericTypeDefinition();
+
+                    if (collectionMapperMap.TryGetValue(toDef, out var mapperType))
+                    {
+                        var fromElement = CollectionHelper.GetEnumerableElement(from);
+                        var toElement = CollectionHelper.GetEnumerableElement(to);
+                        if (fromDef == toDef)
+                        {
+                            return Activator.CreateInstance(mapperType.sameType.MakeGenericType(fromElement, toElement));
+                        }
+                        else
+                        {
+                            return Activator.CreateInstance(mapperType.fromEnumerable.MakeGenericType(from, fromElement, toElement));
+                        }
+                    }
+                }
+                else
+                {
+                    // nongeneric collection?
+                }
+
+                return null;
             }
 
             static object TryCreateExceptionMapper(Type from, Type to)

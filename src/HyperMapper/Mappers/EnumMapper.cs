@@ -123,7 +123,7 @@ namespace HyperMapper.Mappers
         }
     }
 
-    public class EnumToStringMapper<T> : IObjectMapper<T, string>
+    public sealed class EnumToStringMapper<T> : IObjectMapper<T, string>
         where T : struct
     {
         readonly Dictionary<T, string> valueNameMapping;
@@ -157,7 +157,7 @@ namespace HyperMapper.Mappers
         }
     }
 
-    public class StringToEnumMapper<T> : IObjectMapper<string, T>
+    public sealed class StringToEnumMapper<T> : IObjectMapper<string, T>
         where T : struct
     {
         readonly Dictionary<string, T> nameValueMapping;

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text;
 
-namespace HyperMapper.Internal
+namespace HyperMapper
 {
-    internal static class StringMutator
+    public static class StringMutator
     {
         /// <summary>
         /// MyProperty -> MyProperty

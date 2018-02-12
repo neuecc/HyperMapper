@@ -2,7 +2,7 @@
 
 namespace HyperMapper.Mappers
 {
-    public class NullableMapperFromNullableStructToClass<TFrom, TTo> : IObjectMapper<TFrom?, TTo>
+    public sealed class NullableMapperFromNullableStructToClass<TFrom, TTo> : IObjectMapper<TFrom?, TTo>
         where TFrom : struct
         where TTo : class
     {
@@ -14,7 +14,7 @@ namespace HyperMapper.Mappers
         }
     }
 
-    public class NullableMapperFromNullableStructToNullableStruct<TFrom, TTo> : IObjectMapper<TFrom?, TTo?>
+    public sealed class NullableMapperFromNullableStructToNullableStruct<TFrom, TTo> : IObjectMapper<TFrom?, TTo?>
         where TFrom : struct
         where TTo : struct
     {
@@ -26,7 +26,7 @@ namespace HyperMapper.Mappers
         }
     }
 
-    public class NullableMapperFromNullableStructToStruct<TFrom, TTo> : IObjectMapper<TFrom?, TTo>
+    public sealed class NullableMapperFromNullableStructToStruct<TFrom, TTo> : IObjectMapper<TFrom?, TTo>
         where TFrom : struct
         where TTo : struct
     {
@@ -38,7 +38,7 @@ namespace HyperMapper.Mappers
         }
     }
 
-    public class NullableMapperFromClassToNullableStruct<TFrom, TTo> : IObjectMapper<TFrom, TTo?>
+    public sealed class NullableMapperFromClassToNullableStruct<TFrom, TTo> : IObjectMapper<TFrom, TTo?>
         where TFrom : class
         where TTo : struct
     {
@@ -50,7 +50,7 @@ namespace HyperMapper.Mappers
         }
     }
 
-    public class NullableMapperFromStructToNullableStruct<TFrom, TTo> : IObjectMapper<TFrom, TTo?>
+    public sealed class NullableMapperFromStructToNullableStruct<TFrom, TTo> : IObjectMapper<TFrom, TTo?>
         where TFrom : struct
         where TTo : struct
     {
