@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="CollectionTest.cs" />
     <Compile Include="EnumTest.cs" />
+    <Compile Include="PrimitiveTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TupleTest.cs" />
     <Compile Include="Utils\ChainingAssertion.Ext.cs" />

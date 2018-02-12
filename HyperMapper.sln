@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{566ABBF5
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyperMapper.Tests", "tests\HyperMapper.Tests\HyperMapper.Tests.csproj", "{8900B827-D6CD-4F54-A60F-94C33AACAC81}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerfBenchmark", "sandbox\PerfBenchmark\PerfBenchmark.csproj", "{63830CA9-1B6D-4204-B554-83314085C6F5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{8900B827-D6CD-4F54-A60F-94C33AACAC81}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8900B827-D6CD-4F54-A60F-94C33AACAC81}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8900B827-D6CD-4F54-A60F-94C33AACAC81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63830CA9-1B6D-4204-B554-83314085C6F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63830CA9-1B6D-4204-B554-83314085C6F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63830CA9-1B6D-4204-B554-83314085C6F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63830CA9-1B6D-4204-B554-83314085C6F5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -41,6 +47,7 @@ Global
 		{9BDBB200-6E65-4550-B7EF-451F8C9E6C21} = {37E84BEB-59E4-4966-850C-78590439F1AD}
 		{0F7DDC3D-A8D3-4441-AAFD-6E928CFAEC25} = {65D2F346-8FF8-40B4-A7CE-F3B65145146B}
 		{8900B827-D6CD-4F54-A60F-94C33AACAC81} = {566ABBF5-B1F5-46E1-83C9-67E12D4CE1F1}
+		{63830CA9-1B6D-4204-B554-83314085C6F5} = {65D2F346-8FF8-40B4-A7CE-F3B65145146B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {156C78B8-03AB-4366-A4AD-5FA2CF1DDD64}

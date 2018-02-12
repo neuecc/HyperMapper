@@ -18,19 +18,20 @@ namespace DynamicCodeDumper
         {
             try
             {
-                var info = MappingInfo.Create<MyClassA, MyClassB>();
-                info.BeforeMap = x => Console.WriteLine(x.MyProperty);
-                info.AfterMap = x => Console.WriteLine(x.MyProperty3);
+                var info = MappingInfo.Create<Foo, FooDest>();
+                var info2 = MappingInfo.Create<InnerFoo, InnerFooDest>();
+                //info.BeforeMap = x => Console.WriteLine(x.MyProperty);
+                //info.AfterMap = x => Console.WriteLine(x.MyProperty3);
 
                 // info.AddMap(x => x.MyProperty, x => x.MyPropertyNano, x => x);
-                info.AddMap(x => x.MyProperty, x => x.MyProperty3, x => x);
-                info.AddUse(x => x.DT, _ => DateTime.Now);
+                //info.AddMap(x => x.MyProperty, x => x.MyProperty3, x => x);
+                //info.AddUse(x => x.DT, _ => DateTime.Now);
 
                 // info.WithConvertAction(x => x.MyProperty, x => x.MyProperty, x => new MyClassC());
 
 
                 info.BuildMapper();
-
+                info2.BuildMapper();
 
                 // DynamicObjectResolver.Default.GetMapper<MyClassA, MyClassB>();
             }

@@ -86,19 +86,19 @@ namespace HyperMapper.Resolvers
                 {typeof(decimal[]),new BlockCopyMapper<decimal>(sizeof(decimal))},
 
                 // Primitive Nullable Array
-                {typeof(Nullable<Int16>[]), new ShallowCopyArrayMapper<Int16?>()},
-                {typeof(Nullable<Int32>[]), new ShallowCopyArrayMapper<Int32?>()},
-                {typeof(Nullable<Int64>[]), new ShallowCopyArrayMapper<Int64?>()},
-                {typeof(Nullable<UInt16>[]),new ShallowCopyArrayMapper<UInt16?>()},
-                {typeof(Nullable<UInt32>[]),new ShallowCopyArrayMapper<UInt32?>()},
-                {typeof(Nullable<UInt64>[]),new ShallowCopyArrayMapper<UInt64?>()},
-                {typeof(Nullable<Single>[]),new ShallowCopyArrayMapper<Single?>()},
-                {typeof(Nullable<Double>[]),new ShallowCopyArrayMapper<Double?>()},
-                {typeof(Nullable<bool>[]),  new ShallowCopyArrayMapper<bool?>()},
-                {typeof(Nullable<byte>[]),  new ShallowCopyArrayMapper<byte?>()},
-                {typeof(Nullable<sbyte>[]), new ShallowCopyArrayMapper<sbyte?>()},
-                {typeof(Nullable<char>[]),  new ShallowCopyArrayMapper<char?>()},
-                {typeof(Nullable<decimal>[]),        new ShallowCopyArrayMapper<decimal?>()},
+                {typeof(Nullable<Int16>[]),  new ShallowCopyArrayMapper<Int16?>()},
+                {typeof(Nullable<Int32>[]),  new ShallowCopyArrayMapper<Int32?>()},
+                {typeof(Nullable<Int64>[]),  new ShallowCopyArrayMapper<Int64?>()},
+                {typeof(Nullable<UInt16>[]), new ShallowCopyArrayMapper<UInt16?>()},
+                {typeof(Nullable<UInt32>[]), new ShallowCopyArrayMapper<UInt32?>()},
+                {typeof(Nullable<UInt64>[]), new ShallowCopyArrayMapper<UInt64?>()},
+                {typeof(Nullable<Single>[]), new ShallowCopyArrayMapper<Single?>()},
+                {typeof(Nullable<Double>[]), new ShallowCopyArrayMapper<Double?>()},
+                {typeof(Nullable<bool>[]),   new ShallowCopyArrayMapper<bool?>()},
+                {typeof(Nullable<byte>[]),   new ShallowCopyArrayMapper<byte?>()},
+                {typeof(Nullable<sbyte>[]),  new ShallowCopyArrayMapper<sbyte?>()},
+                {typeof(Nullable<char>[]),   new ShallowCopyArrayMapper<char?>()},
+                {typeof(Nullable<decimal>[]),new ShallowCopyArrayMapper<decimal?>()},
 
                 // String
                 {typeof(string), new ReturnSelfMapper<string>()},
@@ -138,14 +138,6 @@ namespace HyperMapper.Resolvers
                 {typeof(ExpandoObject), new ExpandoObjectMapper() },
             };
 
-            static readonly Dictionary<Type, Type> genericMapperMap = new Dictionary<Type, Type>
-            {
-                { typeof(KeyValuePair<,>), typeof(KeyValuePairMapper<,>) }
-                // TODO:...etc...
-
-                // TODO:...Grouping...Lookup...
-            };
-
             static readonly Dictionary<Type, (Type sameType, Type fromEnumerable)> collectionMapperMap = new Dictionary<Type, (Type, Type)>
             {
                 { typeof(IEnumerable<>), (typeof(EnumerableMapper<,>), typeof(EnumerableMapper<,,>)) },
@@ -160,19 +152,9 @@ namespace HyperMapper.Resolvers
                 { typeof(ICollection<>), (typeof(InterfaceCollectionMapper<,>), typeof(InterfaceCollectionMapper<,,>)) },
             };
 
-            // TODO:GenericCollectionMapper
-
-
             public static object CreateMapper(Type from, Type to)
             {
-                var mapper = TryCreateNullableMapper(from, to);
-                if (mapper != null) return mapper;
-
-                mapper = TryCreateEnumMapper(from, to);
-                if (mapper != null) return mapper;
-
-                mapper = TryCreateTupleMapper(from, to);
-                if (mapper != null) return mapper;
+                object mapper = null;
 
                 if (from == to)
                 {
@@ -185,17 +167,31 @@ namespace HyperMapper.Resolvers
                     {
                         return CreateGenericReturnSelfMapper(from);
                     }
-
-                    mapper = TryCreateWellKnownGenericTypeMapper(from, to);
-                    if (mapper != null) return mapper;
                 }
 
-                // allow not same...
+                mapper = TryCreateNullableMapper(from, to);
+                if (mapper != null) return mapper;
+
+                mapper = TryCreateEnumMapper(from, to);
+                if (mapper != null) return mapper;
+
+                // must be after TryCreateEnumMapper and standard mappers.
+                mapper = TryCreatePrimitiveToPrimitiveMapper(from, to);
+                if (mapper != null) return mapper;
+
+                mapper = TryCreateWellKnownGenericTypeMapper(from, to);
+                if (mapper != null) return mapper;
+
+                mapper = TryCreateTupleMapper(from, to);
+                if (mapper != null) return mapper;
+
                 mapper = TryCreateCollectionMapper(from, to);
                 if (mapper != null) return mapper;
 
                 mapper = TryCreateExceptionMapper(from, to);
                 if (mapper != null) return mapper;
+
+                // TODO:object mapper?
 
                 return null;
             }
@@ -280,11 +276,62 @@ namespace HyperMapper.Resolvers
                 return null;
             }
 
+            static object TryCreatePrimitiveToPrimitiveMapper(Type from, Type to)
+            {
+                if (PrimitiveConvertMapper.IsPrimitive(from))
+                {
+                    if (PrimitiveConvertMapper.IsPrimitive(to))
+                    {
+                        return PrimitiveConvertMapper.Build(from, to);
+                    }
+                    else
+                    {
+                        throw new NotSupportedException("Primitive to X mapping does not supported.");
+                    }
+                }
+                else if (PrimitiveConvertMapper.IsPrimitive(to))
+                {
+                    throw new NotSupportedException("X to Primitive mapping does not supported.");
+                }
+
+                return null;
+            }
+
             static object TryCreateWellKnownGenericTypeMapper(Type from, Type to)
             {
                 // KVP<TKey,TValue>, Lazy<T>, Task<T>, ValueTask<T>
+                // IGrouping, ILookup
+                if (from.IsGenericType && to.IsGenericType)
+                {
+                    var fromGenericType = from.GetGenericTypeDefinition();
+                    var toGenericType = to.GetGenericTypeDefinition();
 
-                // TODO:throw new NotImplementedException();
+                    if (fromGenericType == typeof(KeyValuePair<,>) && toGenericType == typeof(KeyValuePair<,>))
+                    {
+                        return Activator.CreateInstance(typeof(KeyValuePairMapper<,,,>).MakeGenericType(from.GenericTypeArguments.Concat(to.GenericTypeArguments).ToArray()));
+                    }
+                    else if (fromGenericType == typeof(Lazy<>) && toGenericType == typeof(Lazy<>))
+                    {
+                        return Activator.CreateInstance(typeof(LazyMapper<,>).MakeGenericType(from.GenericTypeArguments.Concat(to.GenericTypeArguments).ToArray()));
+                    }
+                    else if (fromGenericType == typeof(Task<>) && toGenericType == typeof(Task<>))
+                    {
+                        return Activator.CreateInstance(typeof(TaskValueMapper<,>).MakeGenericType(from.GenericTypeArguments.Concat(to.GenericTypeArguments).ToArray()));
+                    }
+                    else if (fromGenericType == typeof(ValueTask<>) && toGenericType == typeof(ValueTask<>))
+                    {
+                        return Activator.CreateInstance(typeof(ValueTaskMapper<,>).MakeGenericType(from.GenericTypeArguments.Concat(to.GenericTypeArguments).ToArray()));
+                    }
+                    else if (fromGenericType == typeof(IGrouping<,>) && toGenericType == typeof(IGrouping<,>))
+                    {
+                        return Activator.CreateInstance(typeof(InterfaceGroupingMapper<,,,>).MakeGenericType(from.GenericTypeArguments.Concat(to.GenericTypeArguments).ToArray()));
+                    }
+                    else if (fromGenericType == typeof(ILookup<,>) && toGenericType == typeof(ILookup<,>))
+                    {
+                        return Activator.CreateInstance(typeof(InterfaceLookupMapper<,,,>).MakeGenericType(from.GenericTypeArguments.Concat(to.GenericTypeArguments).ToArray()));
+                    }
+                }
+
                 return null;
             }
 
@@ -350,30 +397,24 @@ namespace HyperMapper.Resolvers
                     var rank = from.GetArrayRank();
                     if (rank != to.GetArrayRank())
                     {
-                        return null; // not supported built-in(different rank matching)
+                        throw new NotSupportedException("Diffrent array rank mapping does not supported.");
                     }
 
                     if (rank == 1)
                     {
-                        return Activator.CreateInstance(typeof(ArrayMapper<,>).MakeGenericType(from, to));
+                        return Activator.CreateInstance(typeof(ArrayMapper<,>).MakeGenericType(from.GetElementType(), to.GetElementType()));
                     }
                     else if (rank == 2)
                     {
-                        // TODO:multidimentional array
-                        throw new NotImplementedException();
-                        // return Activator.CreateInstance(typeof(TwoDimentionalArrayFormatter<>).MakeGenericType(t.GetElementType()));
+                        return Activator.CreateInstance(typeof(TwoDimentionalArrayMapper<,>).MakeGenericType(from.GetElementType(), to.GetElementType()));
                     }
                     else if (rank == 3)
                     {
-                        // TODO:multidimentional array
-                        throw new NotImplementedException();
-                        // return Activator.CreateInstance(typeof(ThreeDimentionalArrayFormatter<>).MakeGenericType(t.GetElementType()));
+                        return Activator.CreateInstance(typeof(ThreeDimentionalArrayMapper<,>).MakeGenericType(from.GetElementType(), to.GetElementType()));
                     }
                     else if (rank == 4)
                     {
-                        // TODO:multidimentional array
-                        throw new NotImplementedException();
-                        // return Activator.CreateInstance(typeof(FourDimentionalArrayFormatter<>).MakeGenericType(t.GetElementType()));
+                        return Activator.CreateInstance(typeof(FourDimentionalArrayMapper<,>).MakeGenericType(from.GetElementType(), to.GetElementType()));
                     }
                     else
                     {
@@ -418,12 +459,16 @@ namespace HyperMapper.Resolvers
                     // nongeneric collection?
                 }
 
+                // // TODO:GenericCollectionMapper
+
+
                 return null;
             }
 
             static object TryCreateExceptionMapper(Type from, Type to)
             {
-                throw new NotImplementedException();
+                // TODO:throw new NotImplementedException();
+                return null;
             }
         }
     }
