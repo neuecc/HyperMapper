@@ -37,6 +37,11 @@ namespace HyperMapper.Internal.Emit
             }
         }
 
+        public void EmitLdarg()
+        {
+            il.EmitLdarg(i);
+        }
+
         public void EmitStore()
         {
             il.EmitStarg(i);

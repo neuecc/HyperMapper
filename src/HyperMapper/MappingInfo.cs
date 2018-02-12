@@ -9,20 +9,32 @@ using System.Text;
 using System.Threading.Tasks;
 using HyperMapper.Internal;
 using HyperMapper.Internal.Emit;
+using HyperMapper.Resolvers;
 
 namespace HyperMapper
 {
+#if DEBUG && (NET45 || NET47)
+
+    public interface ISave
+    {
+        AssemblyBuilder Save();
+    }
+
+#endif
+
     public static class MappingInfo
     {
-        public static MappingInfo<TFrom, TTo> Create<TFrom, TTo>()
+        public static MappingInfo<TFrom, TTo> Create<TFrom, TTo>(Func<string, string> nameMatcher = null)
         {
+            nameMatcher = nameMatcher ?? StringMutator.Original;
+
             var fromMembers = GetMembers<TFrom>();
             var toMembers = GetMembers<TTo>();
 
-            var ctorInfos = GetConstructorInfos<TFrom, TTo>(fromMembers);
+            var ctorInfos = GetConstructorInfos<TFrom, TTo>(fromMembers, nameMatcher);
             var matchCtor = ctorInfos.Where(x => x.Arguments != null).OrderByDescending(x => x.Arguments.Length).FirstOrDefault();
 
-            var pairs = BuildMemberPair(fromMembers, toMembers);
+            var pairs = BuildMemberPair(fromMembers, toMembers, nameMatcher);
 
             return new MappingInfo<TFrom, TTo>(fromMembers, toMembers, ctorInfos)
             {
@@ -64,22 +76,21 @@ namespace HyperMapper
             return array.ToArray();
         }
 
-        static MetaConstructorInfo<TFrom, TTo>[] GetConstructorInfos<TFrom, TTo>(MetaMember<TFrom>[] arguments)
+        static MetaConstructorInfo<TFrom, TTo>[] GetConstructorInfos<TFrom, TTo>(MetaMember<TFrom>[] arguments, Func<string, string> nameMatcher)
         {
             var array = new ArrayBuffer<MetaConstructorInfo<TFrom, TTo>>(4);
 
-            var map = arguments.ToDictionary(x => x.MemberName);
+            var map = arguments.Where(x => x.IsReadable).ToDictionary(x => nameMatcher(x.MemberName));
 
             foreach (var ctorInfo in typeof(TTo).GetTypeInfo().DeclaredConstructors)
             {
-                var metaCtor = new MetaConstructorInfo<TFrom, TTo>(ctorInfo);
                 var parameters = ctorInfo.GetParameters();
 
                 var memberBuffer = new ArrayBuffer<MetaMember<TFrom>>(parameters.Length);
 
                 foreach (var item in parameters)
                 {
-                    if (map.TryGetValue(item.Name, out var member))
+                    if (map.TryGetValue(nameMatcher(item.Name), out var member))
                     {
                         memberBuffer.Add(member);
                     }
@@ -88,21 +99,23 @@ namespace HyperMapper
                 // match all.
                 if (parameters.Length == memberBuffer.Size)
                 {
+                    var metaCtor = new MetaConstructorInfo<TFrom, TTo>(ctorInfo);
                     metaCtor.Arguments = memberBuffer.ToArray();
+                    array.Add(metaCtor);
                 }
             }
 
             return array.ToArray();
         }
 
-        static MetaMemberPair<TFrom, TTo>[] BuildMemberPair<TFrom, TTo>(MetaMember<TFrom>[] from, MetaMember<TTo>[] to)
+        static MetaMemberPair<TFrom, TTo>[] BuildMemberPair<TFrom, TTo>(MetaMember<TFrom>[] from, MetaMember<TTo>[] to, Func<string, string> nameMatcher)
         {
             var array = new ArrayBuffer<MetaMemberPair<TFrom, TTo>>(to.Length);
 
-            var map = from.ToDictionary(x => x.MemberName);
-            foreach (var toMember in to)
+            var map = from.Where(x => x.IsReadable).ToDictionary(x => nameMatcher(x.MemberName));
+            foreach (var toMember in to.Where(x => x.IsWritable))
             {
-                if (map.TryGetValue(toMember.MemberName, out var fromMember))
+                if (map.TryGetValue(nameMatcher(toMember.MemberName), out var fromMember))
                 {
                     array.Add(new MetaMemberPair<TFrom, TTo>(fromMember, toMember));
                 }
@@ -180,6 +193,12 @@ namespace HyperMapper
             //TargetMembers = TargetMembers.Where(x => x.To.MemberInfo != member).ToArray();
             //return this;
             throw new NotImplementedException();
+        }
+
+
+        public IObjectMapper<TFrom, TTo> BuildMapper()
+        {
+            return (IObjectMapper<TFrom, TTo>)DynamicObjectTypeBuilder.BuildMapper(this);
         }
     }
 

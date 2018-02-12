@@ -7,6 +7,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{37E84BEB-59E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HyperMapper", "src\HyperMapper\HyperMapper.csproj", "{9BDBB200-6E65-4550-B7EF-451F8C9E6C21}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sandbox", "sandbox", "{65D2F346-8FF8-40B4-A7CE-F3B65145146B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicCodeDumper", "sandbox\DynamicCodeDumper\DynamicCodeDumper.csproj", "{0F7DDC3D-A8D3-4441-AAFD-6E928CFAEC25}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,12 +21,17 @@ Global
 		{9BDBB200-6E65-4550-B7EF-451F8C9E6C21}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9BDBB200-6E65-4550-B7EF-451F8C9E6C21}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9BDBB200-6E65-4550-B7EF-451F8C9E6C21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F7DDC3D-A8D3-4441-AAFD-6E928CFAEC25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F7DDC3D-A8D3-4441-AAFD-6E928CFAEC25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F7DDC3D-A8D3-4441-AAFD-6E928CFAEC25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F7DDC3D-A8D3-4441-AAFD-6E928CFAEC25}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9BDBB200-6E65-4550-B7EF-451F8C9E6C21} = {37E84BEB-59E4-4966-850C-78590439F1AD}
+		{0F7DDC3D-A8D3-4441-AAFD-6E928CFAEC25} = {65D2F346-8FF8-40B4-A7CE-F3B65145146B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {156C78B8-03AB-4366-A4AD-5FA2CF1DDD64}
