@@ -1,4 +1,5 @@
 ﻿using HyperMapper.Mappers;
+using System.Linq;
 using HyperMapper.Internal;
 using System;
 using System.Collections.Generic;
@@ -170,6 +171,9 @@ namespace HyperMapper.Resolvers
                 mapper = TryCreateEnumMapper(from, to);
                 if (mapper != null) return mapper;
 
+                mapper = TryCreateTupleMapper(from, to);
+                if (mapper != null) return mapper;
+
                 if (from == to)
                 {
                     if (mapperMap.TryGetValue(from, out mapper))
@@ -183,9 +187,6 @@ namespace HyperMapper.Resolvers
                     }
 
                     mapper = TryCreateWellKnownGenericTypeMapper(from, to);
-                    if (mapper != null) return mapper;
-
-                    mapper = TryCreateTupleMapper(from, to);
                     if (mapper != null) return mapper;
                 }
 
@@ -290,8 +291,55 @@ namespace HyperMapper.Resolvers
             static object TryCreateTupleMapper(Type from, Type to)
             {
                 // Tuple or ValueTuple
+                if (from.FullName.StartsWith("System.Tuple", StringComparison.Ordinal))
+                {
+                    if (!to.FullName.StartsWith("System.Tuple", StringComparison.Ordinal)) throw new NotSupportedException($"Tuple to {to.Name} does not supported.");
 
-                // TODO:throw new NotImplementedException();
+                    var len = from.GenericTypeArguments.Length;
+                    if (len != to.GenericTypeArguments.Length) throw new NotSupportedException("Different tuple items count does not supported.");
+
+                    Type tupleMapperType = null;
+                    switch (len)
+                    {
+                        case 1: tupleMapperType = typeof(TupleMapper<,>); break;
+                        case 2: tupleMapperType = typeof(TupleMapper<,,,>); break;
+                        case 3: tupleMapperType = typeof(TupleMapper<,,,,,>); break;
+                        case 4: tupleMapperType = typeof(TupleMapper<,,,,,,,>); break;
+                        case 5: tupleMapperType = typeof(TupleMapper<,,,,,,,,,>); break;
+                        case 6: tupleMapperType = typeof(TupleMapper<,,,,,,,,,,,>); break;
+                        case 7: tupleMapperType = typeof(TupleMapper<,,,,,,,,,,,,,>); break;
+                        case 8: tupleMapperType = typeof(TupleMapper<,,,,,,,,,,,,,,,>); break;
+                        default:
+                            break;
+                    }
+
+                    return Activator.CreateInstance(tupleMapperType.MakeGenericType(from.GenericTypeArguments.Concat(to.GenericTypeArguments).ToArray()));
+                }
+                else if (from.FullName.StartsWith("System.ValueTuple", StringComparison.Ordinal))
+                {
+                    if (!to.FullName.StartsWith("System.ValueTuple", StringComparison.Ordinal)) throw new NotSupportedException($"ValueTuple to {to.Name} does not supported.");
+
+                    var len = from.GenericTypeArguments.Length;
+                    if (len != to.GenericTypeArguments.Length) throw new NotSupportedException("Different tuple items count does not supported.");
+
+                    Type tupleMapperType = null;
+                    switch (len)
+                    {
+                        case 1: tupleMapperType = typeof(ValueTupleMapper<,>); break;
+                        case 2: tupleMapperType = typeof(ValueTupleMapper<,,,>); break;
+                        case 3: tupleMapperType = typeof(ValueTupleMapper<,,,,,>); break;
+                        case 4: tupleMapperType = typeof(ValueTupleMapper<,,,,,,,>); break;
+                        case 5: tupleMapperType = typeof(ValueTupleMapper<,,,,,,,,,>); break;
+                        case 6: tupleMapperType = typeof(ValueTupleMapper<,,,,,,,,,,,>); break;
+                        case 7: tupleMapperType = typeof(ValueTupleMapper<,,,,,,,,,,,,,>); break;
+                        case 8: tupleMapperType = typeof(ValueTupleMapper<,,,,,,,,,,,,,,,>); break;
+                        default:
+                            break;
+                    }
+
+                    return Activator.CreateInstance(tupleMapperType.MakeGenericType(from.GenericTypeArguments.Concat(to.GenericTypeArguments).ToArray()));
+                }
+
                 return null;
             }
 

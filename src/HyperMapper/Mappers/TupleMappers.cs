@@ -4,148 +4,220 @@ using HyperMapper.Internal;
 
 namespace HyperMapper.Mappers
 {
-    public sealed class TupleMapper<T1> : IObjectMapper<Tuple<T1>, Tuple<T1>>
+    public sealed class TupleMapper<T1, U1> : IObjectMapper<Tuple<T1>, Tuple<U1>>
     {
-        public Tuple<T1> Map(Tuple<T1> from, IObjectMapperResolver resolver)
+        public Tuple<U1> Map(Tuple<T1> from, IObjectMapperResolver resolver)
         {
             if (from == null) return null;
 
-            return new Tuple<T1>(from.Item1);
+            return new Tuple<U1>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver));
         }
     }
 
-    public sealed class TupleMapper<T1, T2> : IObjectMapper<Tuple<T1, T2>, Tuple<T1, T2>>
+    public sealed class TupleMapper<T1, T2, U1, U2> : IObjectMapper<Tuple<T1, T2>, Tuple<U1, U2>>
     {
-        public Tuple<T1, T2> Map(Tuple<T1, T2> from, IObjectMapperResolver resolver)
+        public Tuple<U1, U2> Map(Tuple<T1, T2> from, IObjectMapperResolver resolver)
         {
             if (from == null) return null;
 
-            return new Tuple<T1, T2>(from.Item1, from.Item2);
+            return new Tuple<U1, U2>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver),
+                resolver.GetMapperWithVerify<T2, U2>().Map(from.Item2, resolver));
         }
     }
 
-    public sealed class TupleMapper<T1, T2, T3> : IObjectMapper<Tuple<T1, T2, T3>, Tuple<T1, T2, T3>>
+    public sealed class TupleMapper<T1, T2, T3, U1, U2, U3> : IObjectMapper<Tuple<T1, T2, T3>, Tuple<U1, U2, U3>>
     {
-        public Tuple<T1, T2, T3> Map(Tuple<T1, T2, T3> from, IObjectMapperResolver resolver)
+        public Tuple<U1, U2, U3> Map(Tuple<T1, T2, T3> from, IObjectMapperResolver resolver)
         {
             if (from == null) return null;
 
-            return new Tuple<T1, T2, T3>(from.Item1, from.Item2, from.Item3);
+            return new Tuple<U1, U2, U3>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver),
+                resolver.GetMapperWithVerify<T2, U2>().Map(from.Item2, resolver),
+                resolver.GetMapperWithVerify<T3, U3>().Map(from.Item3, resolver));
         }
     }
 
-    public sealed class TupleMapper<T1, T2, T3, T4> : IObjectMapper<Tuple<T1, T2, T3, T4>, Tuple<T1, T2, T3, T4>>
+    public sealed class TupleMapper<T1, T2, T3, T4, U1, U2, U3, U4> : IObjectMapper<Tuple<T1, T2, T3, T4>, Tuple<U1, U2, U3, U4>>
     {
-        public Tuple<T1, T2, T3, T4> Map(Tuple<T1, T2, T3, T4> from, IObjectMapperResolver resolver)
+        public Tuple<U1, U2, U3, U4> Map(Tuple<T1, T2, T3, T4> from, IObjectMapperResolver resolver)
         {
             if (from == null) return null;
 
-            return new Tuple<T1, T2, T3, T4>(from.Item1, from.Item2, from.Item3, from.Item4);
+            return new Tuple<U1, U2, U3, U4>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver),
+                resolver.GetMapperWithVerify<T2, U2>().Map(from.Item2, resolver),
+                resolver.GetMapperWithVerify<T3, U3>().Map(from.Item3, resolver),
+                resolver.GetMapperWithVerify<T4, U4>().Map(from.Item4, resolver));
         }
     }
 
-    public sealed class TupleMapper<T1, T2, T3, T4, T5> : IObjectMapper<Tuple<T1, T2, T3, T4, T5>, Tuple<T1, T2, T3, T4, T5>>
+    public sealed class TupleMapper<T1, T2, T3, T4, T5, U1, U2, U3, U4, U5> : IObjectMapper<Tuple<T1, T2, T3, T4, T5>, Tuple<U1, U2, U3, U4, U5>>
     {
-        public Tuple<T1, T2, T3, T4, T5> Map(Tuple<T1, T2, T3, T4, T5> from, IObjectMapperResolver resolver)
+        public Tuple<U1, U2, U3, U4, U5> Map(Tuple<T1, T2, T3, T4, T5> from, IObjectMapperResolver resolver)
         {
             if (from == null) return null;
 
-            return new Tuple<T1, T2, T3, T4, T5>(from.Item1, from.Item2, from.Item3, from.Item4, from.Item5);
+            return new Tuple<U1, U2, U3, U4, U5>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver),
+                resolver.GetMapperWithVerify<T2, U2>().Map(from.Item2, resolver),
+                resolver.GetMapperWithVerify<T3, U3>().Map(from.Item3, resolver),
+                resolver.GetMapperWithVerify<T4, U4>().Map(from.Item4, resolver),
+                resolver.GetMapperWithVerify<T5, U5>().Map(from.Item5, resolver));
         }
     }
 
-    public sealed class TupleMapper<T1, T2, T3, T4, T5, T6> : IObjectMapper<Tuple<T1, T2, T3, T4, T5, T6>, Tuple<T1, T2, T3, T4, T5, T6>>
+    public sealed class TupleMapper<T1, T2, T3, T4, T5, T6, U1, U2, U3, U4, U5, U6> : IObjectMapper<Tuple<T1, T2, T3, T4, T5, T6>, Tuple<U1, U2, U3, U4, U5, U6>>
     {
-        public Tuple<T1, T2, T3, T4, T5, T6> Map(Tuple<T1, T2, T3, T4, T5, T6> from, IObjectMapperResolver resolver)
+        public Tuple<U1, U2, U3, U4, U5, U6> Map(Tuple<T1, T2, T3, T4, T5, T6> from, IObjectMapperResolver resolver)
         {
             if (from == null) return null;
 
-            return new Tuple<T1, T2, T3, T4, T5, T6>(from.Item1, from.Item2, from.Item3, from.Item4, from.Item5, from.Item6);
+            return new Tuple<U1, U2, U3, U4, U5, U6>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver),
+                resolver.GetMapperWithVerify<T2, U2>().Map(from.Item2, resolver),
+                resolver.GetMapperWithVerify<T3, U3>().Map(from.Item3, resolver),
+                resolver.GetMapperWithVerify<T4, U4>().Map(from.Item4, resolver),
+                resolver.GetMapperWithVerify<T5, U5>().Map(from.Item5, resolver),
+                resolver.GetMapperWithVerify<T6, U6>().Map(from.Item6, resolver));
         }
     }
 
-    public sealed class TupleMapper<T1, T2, T3, T4, T5, T6, T7> : IObjectMapper<Tuple<T1, T2, T3, T4, T5, T6, T7>, Tuple<T1, T2, T3, T4, T5, T6, T7>>
+    public sealed class TupleMapper<T1, T2, T3, T4, T5, T6, T7, U1, U2, U3, U4, U5, U6, U7> : IObjectMapper<Tuple<T1, T2, T3, T4, T5, T6, T7>, Tuple<U1, U2, U3, U4, U5, U6, U7>>
     {
-        public Tuple<T1, T2, T3, T4, T5, T6, T7> Map(Tuple<T1, T2, T3, T4, T5, T6, T7> from, IObjectMapperResolver resolver)
+        public Tuple<U1, U2, U3, U4, U5, U6, U7> Map(Tuple<T1, T2, T3, T4, T5, T6, T7> from, IObjectMapperResolver resolver)
         {
             if (from == null) return null;
 
-            return new Tuple<T1, T2, T3, T4, T5, T6, T7>(from.Item1, from.Item2, from.Item3, from.Item4, from.Item5, from.Item6, from.Item7);
+            return new Tuple<U1, U2, U3, U4, U5, U6, U7>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver),
+                resolver.GetMapperWithVerify<T2, U2>().Map(from.Item2, resolver),
+                resolver.GetMapperWithVerify<T3, U3>().Map(from.Item3, resolver),
+                resolver.GetMapperWithVerify<T4, U4>().Map(from.Item4, resolver),
+                resolver.GetMapperWithVerify<T5, U5>().Map(from.Item5, resolver),
+                resolver.GetMapperWithVerify<T6, U6>().Map(from.Item6, resolver),
+                resolver.GetMapperWithVerify<T7, U7>().Map(from.Item7, resolver));
         }
     }
 
-    public sealed class TupleMapper<T1, T2, T3, T4, T5, T6, T7, TRest> : IObjectMapper<Tuple<T1, T2, T3, T4, T5, T6, T7, TRest>, Tuple<T1, T2, T3, T4, T5, T6, T7, TRest>>
+    public sealed class TupleMapper<T1, T2, T3, T4, T5, T6, T7, TRest, U1, U2, U3, U4, U5, U6, U7, URest> : IObjectMapper<Tuple<T1, T2, T3, T4, T5, T6, T7, TRest>, Tuple<U1, U2, U3, U4, U5, U6, U7, URest>>
     {
-        public Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> Map(Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> from, IObjectMapperResolver resolver)
+        public Tuple<U1, U2, U3, U4, U5, U6, U7, URest> Map(Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> from, IObjectMapperResolver resolver)
         {
             if (from == null) return null;
 
-            return new Tuple<T1, T2, T3, T4, T5, T6, T7, TRest>(from.Item1, from.Item2, from.Item3, from.Item4, from.Item5, from.Item6, from.Item7, from.Rest);
+            return new Tuple<U1, U2, U3, U4, U5, U6, U7, URest>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver),
+                resolver.GetMapperWithVerify<T2, U2>().Map(from.Item2, resolver),
+                resolver.GetMapperWithVerify<T3, U3>().Map(from.Item3, resolver),
+                resolver.GetMapperWithVerify<T4, U4>().Map(from.Item4, resolver),
+                resolver.GetMapperWithVerify<T5, U5>().Map(from.Item5, resolver),
+                resolver.GetMapperWithVerify<T6, U6>().Map(from.Item6, resolver),
+                resolver.GetMapperWithVerify<T7, U7>().Map(from.Item7, resolver),
+                resolver.GetMapperWithVerify<TRest, URest>().Map(from.Rest, resolver));
         }
     }
 
 
-    public sealed class ValueTupleMapper<T1> : IObjectMapper<ValueTuple<T1>, ValueTuple<T1>>
+    public sealed class ValueTupleMapper<T1, U1> : IObjectMapper<ValueTuple<T1>, ValueTuple<U1>>
     {
-        public ValueTuple<T1> Map(ValueTuple<T1> from, IObjectMapperResolver resolver)
+        public ValueTuple<U1> Map(ValueTuple<T1> from, IObjectMapperResolver resolver)
         {
-            return new ValueTuple<T1>(from.Item1);
+            return new ValueTuple<U1>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver));
         }
     }
 
-    public sealed class ValueTupleMapper<T1, T2> : IObjectMapper<ValueTuple<T1, T2>, ValueTuple<T1, T2>>
+    public sealed class ValueTupleMapper<T1, T2, U1, U2> : IObjectMapper<ValueTuple<T1, T2>, ValueTuple<U1, U2>>
     {
-        public ValueTuple<T1, T2> Map(ValueTuple<T1, T2> from, IObjectMapperResolver resolver)
+        public ValueTuple<U1, U2> Map(ValueTuple<T1, T2> from, IObjectMapperResolver resolver)
         {
-            return new ValueTuple<T1, T2>(from.Item1, from.Item2);
+            return new ValueTuple<U1, U2>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver),
+                resolver.GetMapperWithVerify<T2, U2>().Map(from.Item2, resolver));
         }
     }
 
-    public sealed class ValueTupleMapper<T1, T2, T3> : IObjectMapper<ValueTuple<T1, T2, T3>, ValueTuple<T1, T2, T3>>
+    public sealed class ValueTupleMapper<T1, T2, T3, U1, U2, U3> : IObjectMapper<ValueTuple<T1, T2, T3>, ValueTuple<U1, U2, U3>>
     {
-        public ValueTuple<T1, T2, T3> Map(ValueTuple<T1, T2, T3> from, IObjectMapperResolver resolver)
+        public ValueTuple<U1, U2, U3> Map(ValueTuple<T1, T2, T3> from, IObjectMapperResolver resolver)
         {
-            return new ValueTuple<T1, T2, T3>(from.Item1, from.Item2, from.Item3);
+            return new ValueTuple<U1, U2, U3>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver),
+                resolver.GetMapperWithVerify<T2, U2>().Map(from.Item2, resolver),
+                resolver.GetMapperWithVerify<T3, U3>().Map(from.Item3, resolver));
         }
     }
 
-    public sealed class ValueTupleMapper<T1, T2, T3, T4> : IObjectMapper<ValueTuple<T1, T2, T3, T4>, ValueTuple<T1, T2, T3, T4>>
+    public sealed class ValueTupleMapper<T1, T2, T3, T4, U1, U2, U3, U4> : IObjectMapper<ValueTuple<T1, T2, T3, T4>, ValueTuple<U1, U2, U3, U4>>
     {
-        public ValueTuple<T1, T2, T3, T4> Map(ValueTuple<T1, T2, T3, T4> from, IObjectMapperResolver resolver)
+        public ValueTuple<U1, U2, U3, U4> Map(ValueTuple<T1, T2, T3, T4> from, IObjectMapperResolver resolver)
         {
-            return new ValueTuple<T1, T2, T3, T4>(from.Item1, from.Item2, from.Item3, from.Item4);
+            return new ValueTuple<U1, U2, U3, U4>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver),
+                resolver.GetMapperWithVerify<T2, U2>().Map(from.Item2, resolver),
+                resolver.GetMapperWithVerify<T3, U3>().Map(from.Item3, resolver),
+                resolver.GetMapperWithVerify<T4, U4>().Map(from.Item4, resolver));
         }
     }
 
-    public sealed class ValueTupleMapper<T1, T2, T3, T4, T5> : IObjectMapper<ValueTuple<T1, T2, T3, T4, T5>, ValueTuple<T1, T2, T3, T4, T5>>
+    public sealed class ValueTupleMapper<T1, T2, T3, T4, T5, U1, U2, U3, U4, U5> : IObjectMapper<ValueTuple<T1, T2, T3, T4, T5>, ValueTuple<U1, U2, U3, U4, U5>>
     {
-        public ValueTuple<T1, T2, T3, T4, T5> Map(ValueTuple<T1, T2, T3, T4, T5> from, IObjectMapperResolver resolver)
+        public ValueTuple<U1, U2, U3, U4, U5> Map(ValueTuple<T1, T2, T3, T4, T5> from, IObjectMapperResolver resolver)
         {
-            return new ValueTuple<T1, T2, T3, T4, T5>(from.Item1, from.Item2, from.Item3, from.Item4, from.Item5);
+            return new ValueTuple<U1, U2, U3, U4, U5>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver),
+                resolver.GetMapperWithVerify<T2, U2>().Map(from.Item2, resolver),
+                resolver.GetMapperWithVerify<T3, U3>().Map(from.Item3, resolver),
+                resolver.GetMapperWithVerify<T4, U4>().Map(from.Item4, resolver),
+                resolver.GetMapperWithVerify<T5, U5>().Map(from.Item5, resolver));
         }
     }
 
-    public sealed class ValueTupleMapper<T1, T2, T3, T4, T5, T6> : IObjectMapper<ValueTuple<T1, T2, T3, T4, T5, T6>, ValueTuple<T1, T2, T3, T4, T5, T6>>
+    public sealed class ValueTupleMapper<T1, T2, T3, T4, T5, T6, U1, U2, U3, U4, U5, U6> : IObjectMapper<ValueTuple<T1, T2, T3, T4, T5, T6>, ValueTuple<U1, U2, U3, U4, U5, U6>>
     {
-        public ValueTuple<T1, T2, T3, T4, T5, T6> Map(ValueTuple<T1, T2, T3, T4, T5, T6> from, IObjectMapperResolver resolver)
+        public ValueTuple<U1, U2, U3, U4, U5, U6> Map(ValueTuple<T1, T2, T3, T4, T5, T6> from, IObjectMapperResolver resolver)
         {
-            return new ValueTuple<T1, T2, T3, T4, T5, T6>(from.Item1, from.Item2, from.Item3, from.Item4, from.Item5, from.Item6);
+            return new ValueTuple<U1, U2, U3, U4, U5, U6>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver),
+                resolver.GetMapperWithVerify<T2, U2>().Map(from.Item2, resolver),
+                resolver.GetMapperWithVerify<T3, U3>().Map(from.Item3, resolver),
+                resolver.GetMapperWithVerify<T4, U4>().Map(from.Item4, resolver),
+                resolver.GetMapperWithVerify<T5, U5>().Map(from.Item5, resolver),
+                resolver.GetMapperWithVerify<T6, U6>().Map(from.Item6, resolver));
         }
     }
 
-    public sealed class ValueTupleMapper<T1, T2, T3, T4, T5, T6, T7> : IObjectMapper<ValueTuple<T1, T2, T3, T4, T5, T6, T7>, ValueTuple<T1, T2, T3, T4, T5, T6, T7>>
+    public sealed class ValueTupleMapper<T1, T2, T3, T4, T5, T6, T7, U1, U2, U3, U4, U5, U6, U7> : IObjectMapper<ValueTuple<T1, T2, T3, T4, T5, T6, T7>, ValueTuple<U1, U2, U3, U4, U5, U6, U7>>
     {
-        public ValueTuple<T1, T2, T3, T4, T5, T6, T7> Map(ValueTuple<T1, T2, T3, T4, T5, T6, T7> from, IObjectMapperResolver resolver)
+        public ValueTuple<U1, U2, U3, U4, U5, U6, U7> Map(ValueTuple<T1, T2, T3, T4, T5, T6, T7> from, IObjectMapperResolver resolver)
         {
-            return new ValueTuple<T1, T2, T3, T4, T5, T6, T7>(from.Item1, from.Item2, from.Item3, from.Item4, from.Item5, from.Item6, from.Item7);
+            return new ValueTuple<U1, U2, U3, U4, U5, U6, U7>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver),
+                resolver.GetMapperWithVerify<T2, U2>().Map(from.Item2, resolver),
+                resolver.GetMapperWithVerify<T3, U3>().Map(from.Item3, resolver),
+                resolver.GetMapperWithVerify<T4, U4>().Map(from.Item4, resolver),
+                resolver.GetMapperWithVerify<T5, U5>().Map(from.Item5, resolver),
+                resolver.GetMapperWithVerify<T6, U6>().Map(from.Item6, resolver),
+                resolver.GetMapperWithVerify<T7, U7>().Map(from.Item7, resolver));
         }
     }
 
-    public sealed class ValueTupleMapper<T1, T2, T3, T4, T5, T6, T7, TRest> : IObjectMapper<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>, ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>> where TRest : struct
+    public sealed class ValueTupleMapper<T1, T2, T3, T4, T5, T6, T7, TRest, U1, U2, U3, U4, U5, U6, U7, URest> : IObjectMapper<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>, ValueTuple<U1, U2, U3, U4, U5, U6, U7, URest>> where TRest : struct where URest : struct
     {
-        public ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> Map(ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> from, IObjectMapperResolver resolver)
+        public ValueTuple<U1, U2, U3, U4, U5, U6, U7, URest> Map(ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> from, IObjectMapperResolver resolver)
         {
-            return new ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>(from.Item1, from.Item2, from.Item3, from.Item4, from.Item5, from.Item6, from.Item7, from.Rest);
+            return new ValueTuple<U1, U2, U3, U4, U5, U6, U7, URest>(
+                resolver.GetMapperWithVerify<T1, U1>().Map(from.Item1, resolver),
+                resolver.GetMapperWithVerify<T2, U2>().Map(from.Item2, resolver),
+                resolver.GetMapperWithVerify<T3, U3>().Map(from.Item3, resolver),
+                resolver.GetMapperWithVerify<T4, U4>().Map(from.Item4, resolver),
+                resolver.GetMapperWithVerify<T5, U5>().Map(from.Item5, resolver),
+                resolver.GetMapperWithVerify<T6, U6>().Map(from.Item6, resolver),
+                resolver.GetMapperWithVerify<T7, U7>().Map(from.Item7, resolver),
+                resolver.GetMapperWithVerify<TRest, URest>().Map(from.Rest, resolver));
         }
     }
 

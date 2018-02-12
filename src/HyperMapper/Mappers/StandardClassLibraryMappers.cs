@@ -29,10 +29,12 @@ namespace HyperMapper.Mappers
     {
         public ExpandoObject Map(ExpandoObject from, IObjectMapperResolver resolver)
         {
+            var objectMapper = resolver.GetMapperWithVerify<object, object>();
+
             var to = (IDictionary<string, object>)new ExpandoObject();
             foreach (var item in from)
             {
-                to.Add(item.Key, item.Value);
+                to.Add(item.Key, objectMapper.Map(item.Value, resolver));
             }
             return (ExpandoObject)to;
         }
@@ -44,7 +46,10 @@ namespace HyperMapper.Mappers
     {
         public KeyValuePair<TKey, TValue> Map(KeyValuePair<TKey, TValue> from, IObjectMapperResolver resolver)
         {
-            return new KeyValuePair<TKey, TValue>(from.Key, from.Value);
+            var keyMapper = resolver.GetMapperWithVerify<TKey, TKey>();
+            var valueMapper = resolver.GetMapperWithVerify<TValue, TValue>();
+
+            return new KeyValuePair<TKey, TValue>(keyMapper.Map(from.Key, resolver), valueMapper.Map(from.Value, resolver));
         }
     }
 

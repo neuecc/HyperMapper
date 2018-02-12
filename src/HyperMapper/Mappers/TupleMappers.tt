@@ -12,17 +12,22 @@ namespace HyperMapper.Mappers
 {
 <# for(var i = 1; i <= 8; i++) { 
     Func<int, string> toT = x => "T" + ((x == 8) ? "Rest" : x.ToString());
+    Func<int, string> toU = x => "U" + ((x == 8) ? "Rest" : x.ToString());
     Func<int, string> toItem = x => ((x == 8) ? "Rest" : "Item" + x);
     var ts = string.Join(", ", Enumerable.Range(1, i).Select(x => toT(x))); 
+    var tu = string.Join(", ", Enumerable.Range(1, i).Select(x => toU(x))); 
     var t = "Tuple<" + ts + ">"; 
+    var u = "Tuple<" + tu + ">"; 
+    var tsu = "Tuple<" + ts + ", " + tu + ">"; 
 #>
-    public sealed class TupleMapper<<#= ts #>> : IObjectMapper<<#= t #>, <#= t #>>
+    public sealed class TupleMapper<<#= ts + ", " + tu #>> : IObjectMapper<<#= t #>, <#= u #>>
     {
-        public <#= t #> Map(<#= t #> from, IObjectMapperResolver resolver)
+        public <#= u #> Map(<#= t #> from, IObjectMapperResolver resolver)
         {
             if (from == null) return null;
 
-            return new Tuple<<#= ts #>>(<#= string.Join(", ", Enumerable.Range(1, i).Select(x => "from." + toItem(x))) #>);
+            return new Tuple<<#= tu #>>(
+                <#= string.Join(",\r\n                ", Enumerable.Range(1, i).Select(x => "resolver.GetMapperWithVerify<" + toT(x) + ", " + toU(x) + ">().Map(from." + toItem(x) + ", resolver)")) #>);
         }
     }
 
@@ -30,15 +35,20 @@ namespace HyperMapper.Mappers
 
 <# for(var i = 1; i <= 8; i++) { 
     Func<int, string> toT = x => "T" + ((x == 8) ? "Rest" : x.ToString());
+    Func<int, string> toU = x => "U" + ((x == 8) ? "Rest" : x.ToString());
     Func<int, string> toItem = x => ((x == 8) ? "Rest" : "Item" + x);
     var ts = string.Join(", ", Enumerable.Range(1, i).Select(x => toT(x))); 
+    var tu = string.Join(", ", Enumerable.Range(1, i).Select(x => toU(x))); 
     var t = "ValueTuple<" + ts + ">"; 
+    var u = "ValueTuple<" + tu + ">"; 
+    var tsu = "ValueTuple<" + ts + ", " + tu + ">"; 
 #>
-    public sealed class ValueTupleMapper<<#= ts #>> : IObjectMapper<<#= t #>, <#= t #>><#= (t.Contains("TRest") ? " where TRest : struct" : "") #>
+    public sealed class ValueTupleMapper<<#= ts + ", " + tu #>> : IObjectMapper<<#= t #>, <#= u #>><#= (t.Contains("TRest") ? " where TRest : struct where URest : struct" : "") #>
     {
-        public <#= t #> Map(<#= t #> from, IObjectMapperResolver resolver)
+        public <#= u #> Map(<#= t #> from, IObjectMapperResolver resolver)
         {
-            return new ValueTuple<<#= ts #>>(<#= string.Join(", ", Enumerable.Range(1, i).Select(x => "from." + toItem(x))) #>);
+            return new ValueTuple<<#= tu #>>(
+                <#= string.Join(",\r\n                ", Enumerable.Range(1, i).Select(x => "resolver.GetMapperWithVerify<" + toT(x) + ", " + toU(x) + ">().Map(from." + toItem(x) + ", resolver)")) #>);
         }
     }
 
