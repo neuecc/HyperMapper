@@ -1,11 +1,24 @@
 ﻿using HyperMapper.Mappers;
+using HyperMapper.Internal;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
+using System.Threading.Tasks;
+using System.Text;
+using System.Collections;
+using System.Dynamic;
 
 namespace HyperMapper.Resolvers
 {
     public class BuiltinResolver : IObjectMapperResolver
     {
+        public static IObjectMapperResolver Instance = new BuiltinResolver();
+
+        BuiltinResolver()
+        {
+
+        }
+
         public IObjectMapper<TFrom, TTo> GetMapper<TFrom, TTo>()
         {
             return Cache<TFrom, TTo>.mapper;
@@ -83,14 +96,13 @@ namespace HyperMapper.Resolvers
                 {typeof(Nullable<byte>[]),  new ShallowCopyArrayMapper<byte?>()},
                 {typeof(Nullable<sbyte>[]), new ShallowCopyArrayMapper<sbyte?>()},
                 {typeof(Nullable<char>[]),  new ShallowCopyArrayMapper<char?>()},
-                {typeof(decimal?[]),        new ShallowCopyArrayMapper<decimal?>()},
+                {typeof(Nullable<decimal>[]),        new ShallowCopyArrayMapper<decimal?>()},
 
                 // String
                 {typeof(string), new ReturnSelfMapper<string>()},
                 {typeof(string[]), new ShallowCopyArrayMapper<string>()},
 
                 // Standard Structs or immutable classes
-                
                 {typeof(DateTime), new ReturnSelfMapper<DateTime>()},
                 {typeof(DateTime?), new ReturnSelfMapper<DateTime?>()},
                 {typeof(DateTime[]), new ShallowCopyArrayMapper<DateTime>()},
@@ -100,45 +112,41 @@ namespace HyperMapper.Resolvers
                 {typeof(DateTimeOffset), new ReturnSelfMapper<DateTimeOffset>()},
                 {typeof(DateTimeOffset?), new ReturnSelfMapper<DateTimeOffset?>()},
                 {typeof(DateTimeOffset[]), new ShallowCopyArrayMapper<DateTimeOffset>()},
+                {typeof(Guid), new ReturnSelfMapper<Guid>()},
+                {typeof(Guid?), new ReturnSelfMapper<Guid?>()},
+                {typeof(Guid[]), new ShallowCopyArrayMapper<Guid>()},
+                {typeof(Uri), new ReturnSelfMapper<Uri>()},
+                {typeof(Uri[]), new ShallowCopyArrayMapper<Uri>()},
+                {typeof(Version), new ReturnSelfMapper<Version>()},
+                {typeof(Version[]), new ShallowCopyArrayMapper<Version>()},
+                {typeof(Type), new ReturnSelfMapper<Type>()},
+                {typeof(Type[]), new ShallowCopyArrayMapper<Type>()},
+                {typeof(BigInteger), new ReturnSelfMapper<BigInteger>()},
+                {typeof(BigInteger?), new ReturnSelfMapper<BigInteger?>()},
+                {typeof(BigInteger[]), new ShallowCopyArrayMapper<BigInteger>()},
+                {typeof(Complex), new ReturnSelfMapper<Complex>()},
+                {typeof(Complex?), new ReturnSelfMapper<Complex?>()},
+                {typeof(Complex[]), new ShallowCopyArrayMapper<Complex>()},
+                {typeof(Task), new ReturnSelfMapper<Task>()},
+                {typeof(Task[]), new ShallowCopyArrayMapper<Task>()},
 
-
-                
-
-                //{typeof(Guid), GuidFormatter.Default},
-                //{typeof(Guid?), new StaticNullableFormatter<Guid>(GuidFormatter.Default)},
-
-                //{typeof(Uri), UriFormatter.Default},
-                //{typeof(Version), VersionFormatter.Default},
-
-                //{ typeof(StringBuilder), StringBuilderFormatter.Default},
-                //{typeof(BitArray), BitArrayFormatter.Default},
-                //{typeof(Type), TypeFormatter.Default},
-            
-           
-
-
-                //{ typeof(ArraySegment<byte>), ByteArraySegmentFormatter.Default },
-                //{ typeof(ArraySegment<byte>?),new StaticNullableFormatter<ArraySegment<byte>>(ByteArraySegmentFormatter.Default) },
-
-                //{typeof(System.Numerics.BigInteger), BigIntegerFormatter.Default},
-                //{typeof(System.Numerics.BigInteger?), new StaticNullableFormatter<System.Numerics.BigInteger>(BigIntegerFormatter.Default)},
-                //{typeof(System.Numerics.Complex), ComplexFormatter.Default},
-                //{typeof(System.Numerics.Complex?), new StaticNullableFormatter<System.Numerics.Complex>(ComplexFormatter.Default)},
-                //{typeof(System.Dynamic.ExpandoObject), ExpandoObjectFormatter.Default },
-                //{typeof(System.Threading.Tasks.Task), TaskUnitFormatter.Default},
+                // others...
+                {typeof(StringBuilder), new StringBuilderMapper() },
+                {typeof(BitArray), new BitArrayMapper() },
+                {typeof(ExpandoObject), new ExpandoObjectMapper() },
             };
-
-            static object CreateGenericReturnSelfMapper(Type type) => Activator.CreateInstance(typeof(ReturnSelfMapper<>).MakeGenericType(type));
 
             public static object CreateMapper(Type from, Type to)
             {
-                if (from.IsEnum || to.IsEnum)
+                var mapper = TryCreateNullableMapper(from, to);
+                if (mapper != null) return mapper;
+
+                mapper = TryCreateEnumMapper(from, to);
+                if (mapper != null) return mapper;
+
+                if (from == to)
                 {
-                    return CreateEnumMapper(from, to);
-                }
-                else if (from == to)
-                {
-                    if (mapperMap.TryGetValue(from, out var mapper))
+                    if (mapperMap.TryGetValue(from, out mapper))
                     {
                         return mapper;
                     }
@@ -147,20 +155,63 @@ namespace HyperMapper.Resolvers
                     {
                         return CreateGenericReturnSelfMapper(from);
                     }
-                }
-                else
-                {
-                    var mapper = TryCreateCollectionMapper(from, to);
-                    if (mapper != null) return mapper;
 
                     mapper = TryCreateWellKnownGenericTypeMapper(from, to);
                     if (mapper != null) return mapper;
+
+                    mapper = TryCreateTupleMapper(from, to);
+                    if (mapper != null) return mapper;
+
+                    mapper = TryCreateCollectionMapper(from, to);
+                    if (mapper != null) return mapper;
+                }
+
+                // allow not same...
+                mapper = TryCreateExceptionMapper(from, to);
+                if (mapper != null) return mapper;
+
+                return null;
+            }
+
+            static object CreateGenericReturnSelfMapper(Type type) => Activator.CreateInstance(typeof(ReturnSelfMapper<>).MakeGenericType(type));
+
+            static object TryCreateNullableMapper(Type from, Type to)
+            {
+                var isFromNullable = from.IsNullable();
+                var isToNullable = to.IsNullable();
+
+                if (isFromNullable && isToNullable)
+                {
+                    // unwrap nullable type
+                    return Activator.CreateInstance(typeof(NullableMapperFromNullableStructToNullableStruct<,>).MakeGenericType(from.GenericTypeArguments[0], to.GenericTypeArguments[0]));
+                }
+                else if (isFromNullable)
+                {
+                    if (to.IsValueType)
+                    {
+                        return Activator.CreateInstance(typeof(NullableMapperFromNullableStructToStruct<,>).MakeGenericType(from.GenericTypeArguments[0], to));
+                    }
+                    else
+                    {
+                        return Activator.CreateInstance(typeof(NullableMapperFromNullableStructToClass<,>).MakeGenericType(from.GenericTypeArguments[0], to));
+                    }
+                }
+                else if (isToNullable)
+                {
+                    if (from.IsValueType)
+                    {
+                        return Activator.CreateInstance(typeof(NullableMapperFromStructToNullableStruct<,>).MakeGenericType(from, to.GenericTypeArguments[0]));
+                    }
+                    else
+                    {
+                        return Activator.CreateInstance(typeof(NullableMapperFromClassToNullableStruct<,>).MakeGenericType(from, to.GenericTypeArguments[0]));
+                    }
                 }
 
                 return null;
             }
 
-            static object CreateEnumMapper(Type from, Type to)
+            static object TryCreateEnumMapper(Type from, Type to)
             {
                 if (from == to)
                 {
@@ -168,12 +219,50 @@ namespace HyperMapper.Resolvers
                     {
                         return CreateGenericReturnSelfMapper(from);
                     }
-
-                    // TODO:enum to primitive
-
-                    // TODO:primitive to enum
+                }
+                else if (from.IsEnum && to.IsEnum)
+                {
+                    // convert type
+                    return EnumToEnumMapperBuilder.Build(from, to);
+                }
+                else if (from.IsEnum)
+                {
+                    if (to == typeof(string))
+                    {
+                        return Activator.CreateInstance(typeof(EnumToStringMapper<>).MakeGenericType(from));
+                    }
+                    else
+                    {
+                        // enum to primitive(or enum)
+                        return EnumToEnumMapperBuilder.Build(from, to);
+                    }
+                }
+                else if (to.IsEnum)
+                {
+                    if (from == typeof(string))
+                    {
+                        return Activator.CreateInstance(typeof(StringToEnumMapper<>).MakeGenericType(to));
+                    }
+                    else
+                    {
+                        // primitive(or enum) to enum
+                        return EnumToEnumMapperBuilder.Build(from, to);
+                    }
                 }
 
+                return null;
+            }
+
+            static object TryCreateWellKnownGenericTypeMapper(Type from, Type to)
+            {
+                // KVP<TKey,TValue>, Lazy<T>, Task<T>, ValueTask<T>
+
+                throw new NotImplementedException();
+            }
+
+            static object TryCreateTupleMapper(Type from, Type to)
+            {
+                // Tuple or ValueTuple
                 throw new NotImplementedException();
             }
 
@@ -182,7 +271,7 @@ namespace HyperMapper.Resolvers
                 throw new NotImplementedException();
             }
 
-            static object TryCreateWellKnownGenericTypeMapper(Type from, Type to)
+            static object TryCreateExceptionMapper(Type from, Type to)
             {
                 throw new NotImplementedException();
             }

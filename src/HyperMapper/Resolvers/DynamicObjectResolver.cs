@@ -18,16 +18,15 @@ namespace HyperMapper.Resolvers
     /// </summary>
     public static class DynamicObjectResolver
     {
-        public static readonly IObjectMapperResolver Default = DynamicObjectResolverNameMutateOriginal.Instance;
+        public static readonly IObjectMapperResolver Default = DynamicObjectResolverNameMatchOriginal.Instance;
         //public static readonly IObjectMapperResolver CamelCase = DynamicObjectResolverAllowPrivateFalseExcludeNullFalseNameMutateCamelCase.Instance;
         //public static readonly IObjectMapperResolver SnakeCase = DynamicObjectResolverAllowPrivateFalseExcludeNullFalseNameMutateSnakeCase.Instance;
     }
 
 
-    internal sealed class DynamicObjectResolverNameMutateOriginal : IObjectMapperResolver
+    internal sealed class DynamicObjectResolverNameMatchOriginal : IObjectMapperResolver
     {
-        // configuration
-        public static readonly IObjectMapperResolver Instance = new DynamicObjectResolverNameMutateOriginal();
+        public static readonly IObjectMapperResolver Instance = new DynamicObjectResolverNameMatchOriginal();
         static readonly Func<string, string> nameMutator = StringMutator.Original;
 
         public IObjectMapper<TFrom, TTo> GetMapper<TFrom, TTo>()

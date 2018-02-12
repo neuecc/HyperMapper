@@ -38,6 +38,9 @@ namespace HyperMapper.Mappers
         }
     }
 
+    // TODO:ArraySegment
+
+
     public class ArrayMapper<TFrom, TTo> : IObjectMapper<TFrom[], TTo[]>
     {
         public TTo[] Map(TFrom[] obj, IObjectMapperResolver resolver)

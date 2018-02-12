@@ -44,6 +44,10 @@
         <NoWarn>1701;1702;1705;1591</NoWarn>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.4.0" />
+    </ItemGroup>
+
     <!--<ItemGroup>
         <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
         <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />

@@ -78,19 +78,8 @@ namespace HyperMapper.Internal
             {typeof(string)},
         };
 
-        // TODO:...
         public static object BuildMapperFromType<TFrom, TTo>(Func<string, string> nameMutator)
         {
-            var nullableMapper = HandleNullable(typeof(TFrom), typeof(TTo));
-            if (nullableMapper != null) return nullableMapper;
-
-            // TODO:AnonymousType
-            //Type elementType;
-            //if (ti.IsAnonymous() || TryGetInterfaceEnumerableElementType(typeof(T), out elementType))
-            //{
-            //    return DynamicObjectTypeBuilder.BuildAnonymousFormatter(typeof(T), nameMutator, excludeNull, false);
-            //}
-
             var mappingInfo = MappingInfo.Create<TFrom, TTo>(nameMutator);
             return DynamicObjectTypeBuilder.BuildMapper<TFrom, TTo>(mappingInfo);
         }
