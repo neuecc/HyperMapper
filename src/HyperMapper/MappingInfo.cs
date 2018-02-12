@@ -14,16 +14,28 @@ namespace HyperMapper
 {
     public static class MappingInfo
     {
-        public static void Create<TFrom, TTo>()
+        public static MappingInfo<TFrom, TTo> Create<TFrom, TTo>()
         {
+            var fromMembers = GetMembers<TFrom>();
+            var toMembers = GetMembers<TTo>();
 
+            var ctorInfos = GetConstructorInfos<TFrom, TTo>(fromMembers);
+            var matchCtor = ctorInfos.Where(x => x.Arguments != null).OrderByDescending(x => x.Arguments.Length).FirstOrDefault();
 
+            var pairs = BuildMemberPair(fromMembers, toMembers);
 
+            return new MappingInfo<TFrom, TTo>(fromMembers, toMembers, ctorInfos)
+            {
+                TargetConstructor = matchCtor,
+                TargetMembers = pairs
+            };
         }
 
-        static void GetAll<T>()
+        static MetaMember<T>[] GetMembers<T>()
         {
             var type = typeof(T);
+
+            var array = new ArrayBuffer<MetaMember<T>>(4);
 
             foreach (var item in type.GetRuntimeProperties())
             {
@@ -33,6 +45,7 @@ namespace HyperMapper
                 var member = new MetaMember<T>(item);
                 if (!member.IsReadable && !member.IsWritable) continue;
 
+                array.Add(member);
             }
 
             foreach (var item in type.GetRuntimeFields())
@@ -44,9 +57,58 @@ namespace HyperMapper
 
                 var member = new MetaMember<T>(item);
                 if (!member.IsReadable && !member.IsWritable) continue;
+
+                array.Add(member);
             }
 
+            return array.ToArray();
+        }
 
+        static MetaConstructorInfo<TFrom, TTo>[] GetConstructorInfos<TFrom, TTo>(MetaMember<TFrom>[] arguments)
+        {
+            var array = new ArrayBuffer<MetaConstructorInfo<TFrom, TTo>>(4);
+
+            var map = arguments.ToDictionary(x => x.MemberName);
+
+            foreach (var ctorInfo in typeof(TTo).GetTypeInfo().DeclaredConstructors)
+            {
+                var metaCtor = new MetaConstructorInfo<TFrom, TTo>(ctorInfo);
+                var parameters = ctorInfo.GetParameters();
+
+                var memberBuffer = new ArrayBuffer<MetaMember<TFrom>>(parameters.Length);
+
+                foreach (var item in parameters)
+                {
+                    if (map.TryGetValue(item.Name, out var member))
+                    {
+                        memberBuffer.Add(member);
+                    }
+                }
+
+                // match all.
+                if (parameters.Length == memberBuffer.Size)
+                {
+                    metaCtor.Arguments = memberBuffer.ToArray();
+                }
+            }
+
+            return array.ToArray();
+        }
+
+        static MetaMemberPair<TFrom, TTo>[] BuildMemberPair<TFrom, TTo>(MetaMember<TFrom>[] from, MetaMember<TTo>[] to)
+        {
+            var array = new ArrayBuffer<MetaMemberPair<TFrom, TTo>>(to.Length);
+
+            var map = from.ToDictionary(x => x.MemberName);
+            foreach (var toMember in to)
+            {
+                if (map.TryGetValue(toMember.MemberName, out var fromMember))
+                {
+                    array.Add(new MetaMemberPair<TFrom, TTo>(fromMember, toMember));
+                }
+            }
+
+            return array.ToArray();
         }
     }
 
@@ -55,16 +117,18 @@ namespace HyperMapper
     {
         public MetaMemberPair<TFrom, TTo>[] TargetMembers { get; set; }
         public MetaConstructorInfo<TFrom, TTo> TargetConstructor { get; set; }
-        public Action<TFrom> BeforeMap { get; }
-        public Action<TTo> AfterMap { get; }
+        public Action<TFrom> BeforeMap { get; set; }
+        public Action<TTo> AfterMap { get; set; }
 
         public MetaMember<TFrom>[] FromAllMembers { get; }
         public MetaMember<TTo>[] ToAllMembers { get; }
         public MetaConstructorInfo<TFrom, TTo>[] MappingConstructors { get; }
 
-        internal MappingInfo()
+        internal MappingInfo(MetaMember<TFrom>[] fromMembers, MetaMember<TTo>[] toMembers, MetaConstructorInfo<TFrom, TTo>[] mappingConstructors)
         {
-
+            this.FromAllMembers = fromMembers;
+            this.ToAllMembers = toMembers;
+            this.MappingConstructors = mappingConstructors;
         }
 
         public MappingInfo<TFrom, TTo> Ignore<TMember>(Expression<Func<TTo, TMember>> memberSelector)
@@ -76,6 +140,7 @@ namespace HyperMapper
             return this;
         }
 
+        // TODO:not yet implemented
         public MappingInfo<TFrom, TTo> AddMap<TFromMember, TToMember>(Expression<Func<TFrom, TFromMember>> from, Expression<Func<TTo, TToMember>> to)
         {
             // var memberExpression = memberSelector.Body as MemberExpression;
@@ -122,6 +187,11 @@ namespace HyperMapper
     {
         public ConstructorInfo ConstructorInfo { get; }
         public MetaMember<TFrom>[] Arguments { get; set; }
+
+        public MetaConstructorInfo(ConstructorInfo constructorInfo)
+        {
+            ConstructorInfo = constructorInfo;
+        }
     }
 
     public class MetaMemberPair<TFrom, TTo>
@@ -129,67 +199,17 @@ namespace HyperMapper
         public MetaMember<TFrom> From { get; }
         public MetaMember<TTo> To { get; }
         public Func<TFrom, TTo> ConvertAction { get; }
-    }
 
-    public class MetaMember<T>
-    {
-        readonly MethodInfo getMethod;
-        readonly MethodInfo setMethod;
-
-        public string MemberName { get; }
-        public bool IsWritable { get; }
-        public bool IsReadable { get; }
-        public Type Type { get; }
-        public FieldInfo FieldInfo { get; }
-        public PropertyInfo PropertyInfo { get; }
-
-        public bool IsProperty => PropertyInfo != null;
-        public bool IsField => FieldInfo != null;
-        public MemberInfo MemberInfo => IsProperty ? (MemberInfo)PropertyInfo : (MemberInfo)FieldInfo;
-
-        public MetaMember(FieldInfo info)
+        public MetaMemberPair(MetaMember<TFrom> from, MetaMember<TTo> to)
+            : this(from, to, null)
         {
-            this.MemberName = info.Name;
-            this.FieldInfo = info;
-            this.Type = info.FieldType;
-            this.IsReadable = info.IsPublic;
-            this.IsWritable = (info.IsPublic && !info.IsInitOnly);
         }
 
-        public MetaMember(PropertyInfo info)
+        public MetaMemberPair(MetaMember<TFrom> from, MetaMember<TTo> to, Func<TFrom, TTo> convertAction)
         {
-            this.getMethod = info.GetGetMethod(true);
-            this.setMethod = info.GetSetMethod(true);
-
-            this.MemberName = info.Name;
-            this.PropertyInfo = info;
-            this.Type = info.PropertyType;
-            this.IsReadable = (getMethod != null) && (getMethod.IsPublic) && !getMethod.IsStatic;
-            this.IsWritable = (setMethod != null) && (setMethod.IsPublic) && !setMethod.IsStatic;
-        }
-
-        internal void EmitLoadValue(ILGenerator il)
-        {
-            if (IsProperty)
-            {
-                il.EmitCall(getMethod);
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldfld, FieldInfo);
-            }
-        }
-
-        internal void EmitStoreValue(ILGenerator il)
-        {
-            if (IsProperty)
-            {
-                il.EmitCall(setMethod);
-            }
-            else
-            {
-                il.Emit(OpCodes.Stfld, FieldInfo);
-            }
+            From = from;
+            To = to;
+            ConvertAction = convertAction;
         }
     }
 }
