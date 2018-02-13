@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Runtime.CompilerServices;
 
 namespace HyperMapper
 {
@@ -15,30 +16,41 @@ namespace HyperMapper
 
     public static class ObjectMapperResolverExtensions
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IObjectMapper<TFrom, TTo> GetMapperWithVerify<TFrom, TTo>(this IObjectMapperResolver resolver)
         {
-            IObjectMapper<TFrom, TTo> mapper;
+            IObjectMapper<TFrom, TTo> mapper = null;
             try
             {
                 mapper = resolver.GetMapper<TFrom, TTo>();
             }
             catch (TypeInitializationException ex)
             {
-                Exception inner = ex;
-                while (inner.InnerException != null)
-                {
-                    inner = inner.InnerException;
-                }
-
-                throw inner;
+                UnwrapThrow(ex);
             }
 
             if (mapper == null)
             {
-                throw new MapperNotRegisteredException(typeof(TFrom), typeof(TTo), resolver);
+                ThrowWhenNull<TFrom, TTo>(resolver);
             }
 
             return mapper;
+        }
+
+        static void UnwrapThrow(TypeInitializationException ex)
+        {
+            Exception inner = ex;
+            while (inner.InnerException != null)
+            {
+                inner = inner.InnerException;
+            }
+
+            throw inner;
+        }
+
+        static void ThrowWhenNull<TFrom, TTo>(IObjectMapperResolver resolver)
+        {
+            throw new MapperNotRegisteredException(typeof(TFrom), typeof(TTo), resolver);
         }
     }
 

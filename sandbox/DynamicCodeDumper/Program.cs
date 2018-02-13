@@ -41,8 +41,10 @@ namespace DynamicCodeDumper
             }
             finally
             {
+#if DEBUG
                 var a = DynamicObjectTypeBuilder.Save();
                 Verify(a);
+#endif
             }
         }
 

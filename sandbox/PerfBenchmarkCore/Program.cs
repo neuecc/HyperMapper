@@ -48,6 +48,8 @@ public class BenchmarkConfig : ManualConfig
 
         var baseConfig = Job.ShortRun.WithLaunchCount(1).WithTargetCount(1).WithWarmupCount(1);
         // Add(baseConfig.With(Runtime.Clr).With(Jit.RyuJit).With(Platform.X64));
-        Add(baseConfig.With(Runtime.Core).With(Jit.RyuJit).With(CsProjCoreToolchain.NetCoreApp20));
+        //Add(baseConfig.With(Runtime.Core).With(Jit.RyuJit).With(CsProjCoreToolchain.NetCoreApp20));
+
+        Add(baseConfig);
     }
 }

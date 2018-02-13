@@ -1,15 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <!--<TargetFrameworks>netstandard2.0;net47</TargetFrameworks>-->
-
-        <TargetFrameworks>net47</TargetFrameworks>
+        <TargetFramework>netstandard2.0</TargetFramework>
         <Configurations>Debug;Release;</Configurations>
         <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>opensource.snk</AssemblyOriginatorKeyFile>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     </PropertyGroup>
-
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU' AND '$(TargetFramework)'=='net47'">
         <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
@@ -45,21 +42,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <None Include="Mappers\TupleMappers.cs">
-        <DesignTime>True</DesignTime>
-        <AutoGen>True</AutoGen>
-        <DependentUpon>TupleMappers.tt</DependentUpon>
-      </None>
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.4.0" />
-    </ItemGroup>
-
-    <ItemGroup>
       <None Update="Mappers\TupleMappers.tt">
         <Generator>TextTemplatingFileGenerator</Generator>
         <LastGenOutput>TupleMappers.cs</LastGenOutput>
+      </None>
+      <None Update="opensource.snk">
+        <Generator>TextTemplatingFileGenerator</Generator>
+        <LastGenOutput>opensource.cs</LastGenOutput>
       </None>
     </ItemGroup>
 
@@ -75,16 +64,19 @@
       </Compile>
     </ItemGroup>
 
-    <!--<ItemGroup>
+    <ItemGroup>
+      <Folder Include="Mappers\" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
         <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
         <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.4.0" />
         <PackageReference Include="System.ValueTuple" Version="4.4.0" />
     </ItemGroup>
 
-    <ItemGroup Condition=" '$(TargetFramework)' == 'net47' ">
+    <!--<ItemGroup Condition=" '$(TargetFramework)' == 'net47' ">
         <PackageReference Include="System.ValueTuple" Version="4.4.0" />
     </ItemGroup>-->
-
 
 </Project>
