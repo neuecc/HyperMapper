@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace HyperMapper.Mappers
 {
@@ -36,6 +37,48 @@ namespace HyperMapper.Mappers
 
             var newArray = new T[from.Length];
             Buffer.BlockCopy(from, 0, newArray, 0, elementMemorySize * from.Length);
+            return newArray;
+        }
+    }
+
+    // TODO:more faster?
+    public sealed unsafe class Int32MemoryCopyMapper : IObjectMapper<int[], int[]>
+    {
+        const int elementMemorySize = sizeof(int);
+
+        public int[] Map(int[] from, IObjectMapperResolver resolver)
+        {
+            if (from == null) return null;
+
+            var newArray = new int[from.Length];
+            long len = from.Length * elementMemorySize;
+            fixed (void* src = from)
+            fixed (void* dest = newArray)
+            {
+                Buffer.MemoryCopy(src, dest, len, len);
+
+            }
+            return newArray;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int[] Map(int[] from)
+        {
+            if (from == null) return null;
+
+            var newArray = new int[from.Length];
+            for (int i = 0; i < newArray.Length; i++)
+            {
+                newArray[i] = from[i];
+            }
+
+            //long len = from.Length * elementMemorySize;
+            //fixed (void* src = from)
+            //fixed (void* dest = newArray)
+            //{
+            //    Buffer.MemoryCopy(src, dest, len, len);
+
+            //}
             return newArray;
         }
     }
@@ -530,7 +573,7 @@ namespace HyperMapper.Mappers
         }
     }
 
-   
+
 
     // NonGenerics
 

@@ -60,7 +60,7 @@ namespace HyperMapper.Internal
             {typeof(System.DateTimeOffset)},
         };
 
-        static readonly HashSet<Type> primitiveTypes = new HashSet<Type>
+        static readonly HashSet<Type> optimizeInliningType = new HashSet<Type>
         {
             {typeof(short)},
             {typeof(int)},
@@ -76,6 +76,8 @@ namespace HyperMapper.Internal
             {typeof(char)},
             {typeof(decimal)},
             {typeof(string)},
+            {typeof(int?)},
+            {typeof(DateTime)},
         };
 
         public static object BuildMapperFromType<TFrom, TTo>(Func<string, string> nameMutator)
@@ -311,35 +313,98 @@ namespace HyperMapper.Internal
             }
             else
             {
-                if (primitiveTypes.Contains(pair.To.Type))
+                // optimize for primitive to primitive and primitive[] to primitive[]
+                if (pair.From.Type == pair.To.Type)
                 {
-                    if (toLocal.LocalType.IsValueType)
+                    if (optimizeInliningType.Contains(pair.To.Type))
                     {
-                        il.EmitLdloca(toLocal);
-                    }
-                    else
-                    {
-                        il.EmitLdloc(toLocal);
+                        if (toLocal.LocalType.IsValueType)
+                        {
+                            il.EmitLdloca(toLocal);
+                        }
+                        else
+                        {
+                            il.EmitLdloc(toLocal);
+                        }
+
+                        if (convertFields.TryGetValue(pair, out var convertField))
+                        {
+                            il.EmitLoadThis();
+                            il.EmitLdfld(convertField);
+                            il.Emit(OpCodes.Castclass, typeof(Func<,>).MakeGenericType(pair.From.Type, pair.To.Type));
+                        }
+
+                        argFrom.EmitLoad();
+                        pair.From.EmitLoadValue(il);
+
+                        if (convertField != null)
+                        {
+                            il.EmitCall(EmitInfo.GetFuncInvokeDynamic(pair.From.Type, pair.To.Type));
+                        }
+
+                        pair.To.EmitStoreValue(il);
+                        return;
                     }
 
-                    if (convertFields.TryGetValue(pair, out var convertField))
-                    {
-                        il.EmitLoadThis();
-                        il.EmitLdfld(convertField);
-                        il.Emit(OpCodes.Castclass, typeof(Func<,>).MakeGenericType(pair.From.Type, pair.To.Type));
-                    }
+                    // TODO:aggressive inlining...?
+                    //if (pair.To.Type.IsArray)
+                    //{
+                    //    // TODO:other primitive types...
+                    //    if (pair.To.Type.GetElementType() == typeof(int))
+                    //    {
+                    //        il.EmitLdloc(toLocal);
 
-                    argFrom.EmitLoad();
-                    pair.From.EmitLoadValue(il);
+                    //        if (convertFields.TryGetValue(pair, out var convertField))
+                    //        {
+                    //            il.EmitLoadThis();
+                    //            il.EmitLdfld(convertField);
+                    //            il.Emit(OpCodes.Castclass, typeof(Func<,>).MakeGenericType(pair.From.Type, pair.To.Type));
+                    //        }
 
-                    if (convertField != null)
-                    {
-                        il.EmitCall(EmitInfo.GetFuncInvokeDynamic(pair.From.Type, pair.To.Type));
-                    }
+                    //        argFrom.EmitLoad();
+                    //        pair.From.EmitLoadValue(il);
 
-                    pair.To.EmitStoreValue(il);
+                    //        var from = il.DeclareLocal(typeof(Int32[]));
+                    //        il.EmitStloc(from);
+
+                    //        var dest = il.DeclareLocal(typeof(Int32[]));
+                    //        var gotoNoNull = il.DefineLabel();
+                    //        var gotoEnd = il.DefineLabel();
+
+                    //        //il.EmitLdloc(from);
+                    //        //il.Emit(OpCodes.Brtrue, gotoNoNull);
+                    //        //il.Emit(OpCodes.Ldnull);
+                    //        //il.Emit(OpCodes.Br, gotoEnd);
+                    //        //il.MarkLabel(gotoNoNull);
+
+                    //        il.EmitLdloc(from);
+                            
+                    //        il.Emit(OpCodes.Ldlen);
+                    //        il.Emit(OpCodes.Conv_I4);
+                    //        il.Emit(OpCodes.Newarr, typeof(Int32));
+                    //        il.EmitStloc(dest);
+
+                    //        il.EmitLdloc(from);
+                    //        il.EmitLdloc(dest);
+                    //        il.EmitLdloc(from);
+                    //        il.Emit(OpCodes.Ldlen);
+                    //        il.Emit(OpCodes.Conv_I4);
+                    //        il.EmitCall(ExpressionUtility.GetMethodInfo(() => Array.Copy(null, null, 0)));
+                            
+                    //        il.MarkLabel(gotoEnd);
+
+                    //        if (convertField != null)
+                    //        {
+                    //            il.EmitCall(EmitInfo.GetFuncInvokeDynamic(pair.From.Type, pair.To.Type));
+                    //        }
+
+                    //        pair.To.EmitStoreValue(il);
+                    //        return;
+                    //    }
+                    //}
                 }
-                else
+
+                // standard mapping(Mapper.Map)
                 {
                     if (toLocal.LocalType.IsValueType)
                     {

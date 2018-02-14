@@ -72,7 +72,8 @@ namespace HyperMapper.Resolvers
 
                 // Primitive Array
                 {typeof(Int16[]),  new BlockCopyMapper<Int16>(sizeof(Int16))},
-                {typeof(Int32[]),  new BlockCopyMapper<Int32>(sizeof(Int32))},
+                //{typeof(Int32[]),  new BlockCopyMapper<Int32>(sizeof(Int32))},
+                {typeof(Int32[]),  new Int32MemoryCopyMapper()},
                 {typeof(Int64[]),  new BlockCopyMapper<Int64>(sizeof(Int64))},
                 {typeof(UInt16[]), new BlockCopyMapper<UInt16>(sizeof(UInt16))},
                 {typeof(UInt32[]), new BlockCopyMapper<UInt32>(sizeof(UInt32))},

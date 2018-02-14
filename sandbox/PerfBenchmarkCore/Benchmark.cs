@@ -36,17 +36,17 @@ namespace PerfBenchmark
             var mapper = StandardResolver.Default.GetMapper<Foo, Foo>();
         }
 
-        [Benchmark()]
-        public Foo AutoMapper()
-        {
-            return Mapper.Map<Foo, Foo>(_foo);
-        }
+        //[Benchmark()]
+        //public Foo AutoMapper()
+        //{
+        //    return Mapper.Map<Foo, Foo>(_foo);
+        //}
 
-        [Benchmark()]
-        public Foo TinyMapper()
-        {
-            return global::Nelibur.ObjectMapper.TinyMapper.Map<Foo, Foo>(_foo);
-        }
+        //[Benchmark()]
+        //public Foo TinyMapper()
+        //{
+        //    return global::Nelibur.ObjectMapper.TinyMapper.Map<Foo, Foo>(_foo);
+        //}
 
         [Benchmark()]
         public Foo Mapster()
@@ -54,11 +54,11 @@ namespace PerfBenchmark
             return _foo.Adapt<Foo>();
         }
 
-        [Benchmark()]
-        public Foo ExpressMapper()
-        {
-            return global::ExpressMapper.Mapper.Map<Foo, Foo>(_foo);
-        }
+        //[Benchmark()]
+        //public Foo ExpressMapper()
+        //{
+        //    return global::ExpressMapper.Mapper.Map<Foo, Foo>(_foo);
+        //}
 
 
         [Benchmark(Baseline = true)]

@@ -19,13 +19,13 @@ namespace PerfBenchmark
 
         static MapBenchmark()
         {
-            //Mapper.Initialize(cfg =>
-            //{
-            //    cfg.CreateMap<Foo, FooDest>();
-            //    cfg.CreateMap<InnerFoo, InnerFooDest>();
-            //    cfg.CreateMap<Foo, Foo>();
-            //    cfg.CreateMap<InnerFoo, InnerFoo>();
-            //});
+            Mapper.Initialize(cfg =>
+            {
+                cfg.CreateMap<Foo, FooDest>();
+                cfg.CreateMap<InnerFoo, InnerFooDest>();
+                cfg.CreateMap<Foo, Foo>();
+                cfg.CreateMap<InnerFoo, InnerFoo>();
+            });
             //config.AssertConfigurationIsValid();
 
             // config.CreateMapper();
@@ -37,11 +37,11 @@ namespace PerfBenchmark
         }
 
 
-        //[Benchmark(Baseline = true)]
-        //public Foo HyperMapper()
-        //{
-        //    return StandardResolver.Default.GetMapper<Foo, Foo>().Map(_foo, StandardResolver.Default);
-        //}
+        [Benchmark(Baseline = true)]
+        public Foo HyperMapper()
+        {
+            return StandardResolver.Default.GetMapper<Foo, Foo>().Map(_foo, StandardResolver.Default);
+        }
 
         [Benchmark()]
         public Foo AutoMapper()
@@ -49,34 +49,34 @@ namespace PerfBenchmark
             return Mapper.Map<Foo, Foo>(_foo);
         }
 
-        //[Benchmark()]
-        //public Foo TinyMapper()
-        //{
-        //    return global::Nelibur.ObjectMapper.TinyMapper.Map<Foo, Foo>(_foo);
-        //}
+        [Benchmark()]
+        public Foo TinyMapper()
+        {
+            return global::Nelibur.ObjectMapper.TinyMapper.Map<Foo, Foo>(_foo);
+        }
 
-        //[Benchmark()]
-        //public Foo Mapster()
-        //{
-        //    return _foo.Adapt<Foo>();
-        //}
+        [Benchmark()]
+        public Foo Mapster()
+        {
+            return _foo.Adapt<Foo>();
+        }
 
-        //[Benchmark()]
-        //public Foo ExpressMapper()
-        //{
-        //    return global::ExpressMapper.Mapper.Map<Foo, Foo>(_foo);
-        //}
+        [Benchmark()]
+        public Foo ExpressMapper()
+        {
+            return global::ExpressMapper.Mapper.Map<Foo, Foo>(_foo);
+        }
 
-        //[Benchmark()]
-        //public Foo JsonNet()
-        //{
-        //    return Newtonsoft.Json.JsonConvert.DeserializeObject<Foo>(Newtonsoft.Json.JsonConvert.SerializeObject(_foo));
-        //}
+        [Benchmark()]
+        public Foo JsonNet()
+        {
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<Foo>(Newtonsoft.Json.JsonConvert.SerializeObject(_foo));
+        }
 
-        //[Benchmark()]
-        //public Foo MsgPack()
-        //{
-        //    return MessagePack.MessagePackSerializer.Deserialize<Foo>(MessagePack.MessagePackSerializer.Serialize(_foo));
-        //}
+        [Benchmark()]
+        public Foo MsgPack()
+        {
+            return MessagePack.MessagePackSerializer.Deserialize<Foo>(MessagePack.MessagePackSerializer.Serialize(_foo));
+        }
     }
 }

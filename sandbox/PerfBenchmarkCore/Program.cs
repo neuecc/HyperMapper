@@ -31,7 +31,7 @@ class Program
         var _foo = Foo.New();
         var hee = StandardResolver.Default.GetMapper<Foo, Foo>().Map(_foo, StandardResolver.Default);
 
-        // Console.WriteLine(hee);
+        Console.WriteLine(hee);
 
 #else
         switcher.Run(args);
