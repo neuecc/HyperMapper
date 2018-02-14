@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,6 +9,7 @@ namespace HyperMapper.Internal
 {
     internal static class CollectionHelper
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int? FastCount<T>(this IEnumerable<T> source)
         {
             var c = source as ICollection<T>;

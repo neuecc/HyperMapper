@@ -153,6 +153,46 @@ namespace HyperMapper.Resolvers
                 { typeof(ICollection<>), (typeof(InterfaceCollectionMapper<,>), typeof(InterfaceCollectionMapper<,,>)) },
             };
 
+            static readonly Dictionary<Type, object> parseMapperMap = new Dictionary<Type, object>
+            {
+                { typeof(sbyte), new SByteParseMapper() },
+                { typeof(Int16), new Int16ParseMapper() },
+                { typeof(Int32), new Int32ParseMapper() },
+                { typeof(Int64), new Int64ParseMapper() },
+                { typeof(byte), new ByteParseMapper() },
+                { typeof(UInt16), new UInt16ParseMapper() },
+                { typeof(UInt32), new UInt32ParseMapper() },
+                { typeof(UInt64), new UInt64ParseMapper() },
+                { typeof(Single), new SingleParseMapper() },
+                { typeof(Double), new DoubleParseMapper() },
+                { typeof(bool), new BooleanParseMapper() },
+                { typeof(char), new CharParseMapper() },
+                { typeof(decimal), new DecimalParseMapper() },
+                { typeof(DateTime), new DateTimeParseMapper() },
+                { typeof(DateTimeOffset), new DateTimeOffsetParseMapper() },
+                { typeof(TimeSpan), new TimeSpanParseMapper() }
+            };
+
+            static readonly Dictionary<Type, object> nullableParseMapperMap = new Dictionary<Type, object>
+            {
+                { typeof(sbyte?), new NullableSByteParseMapper() },
+                { typeof(Int16?), new NullableInt16ParseMapper() },
+                { typeof(Int32?), new NullableInt32ParseMapper() },
+                { typeof(Int64?), new NullableInt64ParseMapper() },
+                { typeof(byte?),  new NullableByteParseMapper() },
+                { typeof(UInt16?), new NullableUInt16ParseMapper() },
+                { typeof(UInt32?), new NullableUInt32ParseMapper() },
+                { typeof(UInt64?), new NullableUInt64ParseMapper() },
+                { typeof(Single?), new NullableSingleParseMapper() },
+                { typeof(Double?), new NullableDoubleParseMapper() },
+                { typeof(bool?), new NullableBooleanParseMapper() },
+                { typeof(char?), new NullableCharParseMapper() },
+                { typeof(decimal?),  new NullableDecimalParseMapper() },
+                { typeof(DateTime?), new NullableDateTimeParseMapper() },
+                { typeof(DateTimeOffset?), new NullableDateTimeOffsetParseMapper() },
+                { typeof(TimeSpan?), new NullableTimeSpanParseMapper() }
+            };
+
             public static object CreateMapper(Type from, Type to)
             {
                 object mapper = null;
@@ -298,6 +338,13 @@ namespace HyperMapper.Resolvers
                 return null;
             }
 
+            static object TryCreateParseMapper(Type from, Type to)
+            {
+                if (from != typeof(string)) return null;
+
+                // if(to
+            }
+
             static object TryCreateWellKnownGenericTypeMapper(Type from, Type to)
             {
                 // KVP<TKey,TValue>, Lazy<T>, Task<T>, ValueTask<T>
@@ -440,11 +487,17 @@ namespace HyperMapper.Resolvers
                     // generic collection
                     var fromDef = (from.IsArray) ? null : from.GetGenericTypeDefinition();
                     var toDef = to.GetGenericTypeDefinition();
+                    var fromElement = CollectionHelper.GetEnumerableElement(from);
+                    var toElement = CollectionHelper.GetEnumerableElement(to);
+
+                    // special for List<T>
+                    if (toDef == typeof(List<>) && fromElement != null && fromElement.IsPrimitive && fromElement == toElement)
+                    {
+                        return Activator.CreateInstance(typeof(ShallowCopyListMapper<,>).MakeGenericType(from, fromElement));
+                    }
 
                     if (collectionMapperMap.TryGetValue(toDef, out var mapperType))
                     {
-                        var fromElement = CollectionHelper.GetEnumerableElement(from);
-                        var toElement = CollectionHelper.GetEnumerableElement(to);
                         if (fromDef == toDef)
                         {
                             return Activator.CreateInstance(mapperType.sameType.MakeGenericType(fromElement, toElement));

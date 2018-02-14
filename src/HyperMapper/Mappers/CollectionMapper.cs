@@ -229,6 +229,17 @@ namespace HyperMapper.Mappers
         }
     }
 
+    public sealed class ShallowCopyListMapper<TFromCollection, T> : IObjectMapper<TFromCollection, List<T>>
+        where TFromCollection : IEnumerable<T>
+    {
+        public List<T> Map(TFromCollection from, IObjectMapperResolver resolver)
+        {
+            if (from == null) return null;
+
+            return new List<T>(from);
+        }
+    }
+
     public abstract class CollectionMapperBase<TFromCollection, TFromElement, TFromEnumerator, TToElement, TToIntermediate, TToCollection> : IObjectMapper<TFromCollection, TToCollection>
         where TFromCollection : class, IEnumerable<TFromElement>
         where TFromEnumerator : IEnumerator<TFromElement>

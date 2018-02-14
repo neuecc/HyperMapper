@@ -6,6 +6,7 @@ using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Toolchains.CsProj;
+using HyperMapper;
 using HyperMapper.Internal;
 using HyperMapper.Resolvers;
 using PerfBenchmark;
@@ -14,6 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Mapster;
 
 class Program
 {
@@ -30,10 +32,16 @@ class Program
 
         var _foo = Foo.New();
         var hee = StandardResolver.Default.GetMapper<Foo, Foo>().Map(_foo, StandardResolver.Default);
+        var heee = _foo.Adapt<Foo>();
+        var foo2 = new List<int>(){ 1, 10, 100};
+        var foo3 = ObjectMapper.DeepCopy(foo2);
 
-        Console.WriteLine(hee);
+
+        Console.WriteLine(foo3);
 
 #else
+
+
         switcher.Run(args);
 #endif
     }

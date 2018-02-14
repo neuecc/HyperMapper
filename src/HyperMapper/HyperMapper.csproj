@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <!--<TargetFramework>netstandard2.0</TargetFramework>-->
+        <TargetFramework>netstandard2.0</TargetFramework>
 
-        <TargetFramework>net47</TargetFramework>
+        <!--<TargetFramework>net47</TargetFramework>-->
         <Configurations>Debug;Release;</Configurations>
         <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>opensource.snk</AssemblyOriginatorKeyFile>
@@ -44,6 +44,18 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Include="Mappers\StringParseMapper.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>StringParseMapper.tt</DependentUpon>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="Mappers\StringParseMapper.tt">
+          <Generator>TextTemplatingFileGenerator</Generator>
+          <LastGenOutput>StringParseMapper.cs</LastGenOutput>
+        </None>
         <None Update="Mappers\TupleMappers.tt">
             <Generator>TextTemplatingFileGenerator</Generator>
             <LastGenOutput>TupleMappers.cs</LastGenOutput>
@@ -59,15 +71,16 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Update="Mappers\StringParseMapper.cs">
+          <DesignTime>True</DesignTime>
+          <AutoGen>True</AutoGen>
+          <DependentUpon>StringParseMapper.tt</DependentUpon>
+        </Compile>
         <Compile Update="Mappers\TupleMappers.cs">
             <DesignTime>True</DesignTime>
             <AutoGen>True</AutoGen>
             <DependentUpon>TupleMappers.tt</DependentUpon>
         </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Folder Include="Mappers\" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
