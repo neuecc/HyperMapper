@@ -2,7 +2,7 @@ HyperMapper
 ===
 Work in progress.
 
-![image](https://user-images.githubusercontent.com/46207/36118584-e3b60888-1080-11e8-8058-1ad0ce242d75.png)
+![image](https://user-images.githubusercontent.com/46207/36253126-08bd1bb6-128a-11e8-890e-5db004bcb62c.png)
 
 Author Info
 ---
