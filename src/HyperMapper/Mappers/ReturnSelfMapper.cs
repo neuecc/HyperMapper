@@ -15,7 +15,7 @@
     /// Return self for immutable object and TTo : TFrom cast.
     /// </summary>
     public sealed class ReturnSelfMapper<TFrom, TTo> : IObjectMapper<TFrom, TTo>
-        where TTo : TFrom
+        where TFrom : TTo
     {
         public TTo Map(TFrom obj, IObjectMapperResolver resolver)
         {

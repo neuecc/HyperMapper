@@ -533,7 +533,15 @@ namespace HyperMapper.Resolvers
 
             static object TryCreateExceptionMapper(Type from, Type to)
             {
-                // TODO:throw new NotImplementedException();
+                if (typeof(Exception).IsAssignableFrom(from) && typeof(Exception).IsAssignableFrom(to))
+                {
+                    // Exception is maybe immutable(not guranteed)
+                    if (to.IsAssignableFrom(from))
+                    {
+                        return Activator.CreateInstance(typeof(ReturnSelfMapper<,>).MakeGenericType(from, to));
+                    }
+                }
+
                 return null;
             }
         }

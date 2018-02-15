@@ -6,7 +6,9 @@ using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Toolchains.CsProj;
+using HyperMapper;
 using HyperMapper.Internal;
+using HyperMapper.Mappers;
 using HyperMapper.Resolvers;
 using PerfBenchmark;
 using System;
@@ -28,10 +30,13 @@ class Program
 
 #if DEBUG
 
-        var _foo = Foo.New();
-        var hee = StandardResolver.Default.GetMapper<Foo, Foo>().Map(_foo, StandardResolver.Default);
+        //var _foo = Foo.New();
+        //var hee = StandardResolver.Default.GetMapper<Foo, Foo>().Map(_foo, StandardResolver.Default);
 
-        // Console.WriteLine(hee);
+        var ex = new ArgumentException();
+        var foo = ObjectMapper.Map<Exception, Exception>(ex);
+        // new ReturnSelfMapper<Exception, ArgumentException>();
+         Console.WriteLine(foo);
 
 #else
         switcher.Run(args);
