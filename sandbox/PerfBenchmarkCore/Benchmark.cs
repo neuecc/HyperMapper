@@ -48,11 +48,11 @@ namespace PerfBenchmark
         //    return global::Nelibur.ObjectMapper.TinyMapper.Map<Foo, Foo>(_foo);
         //}
 
-        [Benchmark()]
-        public Foo Mapster()
-        {
-            return _foo.Adapt<Foo>();
-        }
+        //[Benchmark()]
+        //public Foo Mapster()
+        //{
+        //    return _foo.Adapt<Foo>();
+        //}
 
         //[Benchmark()]
         //public Foo ExpressMapper()
@@ -64,7 +64,7 @@ namespace PerfBenchmark
         [Benchmark(Baseline = true)]
         public Foo HyperMapper()
         {
-            return StandardResolver.Default.GetMapper<Foo, Foo>().Map(_foo, StandardResolver.Default);
+            return global::HyperMapper.ObjectMapper.Map<Foo, Foo>(_foo);
         }
 
 

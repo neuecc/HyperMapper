@@ -200,7 +200,7 @@ namespace HyperMapper
 
         public IObjectMapper<TFrom, TTo> BuildMapper()
         {
-            return (IObjectMapper<TFrom, TTo>)DynamicObjectTypeBuilder.BuildMapper(this);
+            return (IObjectMapper<TFrom, TTo>)DynamicObjectTypeBuilder.BuildMapperToAssembly(this);
         }
     }
 

@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <!--<TargetFramework>netstandard2.0</TargetFramework>-->
 
-        <!--<TargetFramework>net47</TargetFramework>-->
+        <TargetFramework>net47</TargetFramework>
         <Configurations>Debug;Release;</Configurations>
         <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>opensource.snk</AssemblyOriginatorKeyFile>
@@ -44,6 +44,11 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Include="Mappers\MemoryCopyMapper.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>MemoryCopyMapper.tt</DependentUpon>
+      </None>
       <None Include="Mappers\StringParseMapper.cs">
         <DesignTime>True</DesignTime>
         <AutoGen>True</AutoGen>
@@ -52,6 +57,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Update="Mappers\MemoryCopyMapper.tt">
+          <Generator>TextTemplatingFileGenerator</Generator>
+          <LastGenOutput>MemoryCopyMapper.cs</LastGenOutput>
+        </None>
         <None Update="Mappers\StringParseMapper.tt">
           <Generator>TextTemplatingFileGenerator</Generator>
           <LastGenOutput>StringParseMapper.cs</LastGenOutput>
@@ -71,6 +80,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Update="Mappers\MemoryCopyMapper.cs">
+          <DesignTime>True</DesignTime>
+          <AutoGen>True</AutoGen>
+          <DependentUpon>MemoryCopyMapper.tt</DependentUpon>
+        </Compile>
         <Compile Update="Mappers\StringParseMapper.cs">
           <DesignTime>True</DesignTime>
           <AutoGen>True</AutoGen>

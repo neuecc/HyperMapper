@@ -16,12 +16,12 @@ namespace Benchmark.Flattening
             DateTime = DateTime.Now,
             Doublen = 2312112,
             Foo1 = new InnerFoo { Name = "foo one" },
-            //Foos = new List<InnerFoo>
-            //    {
-            //        new InnerFoo {Name = "j1", Int64 = 123, NullInt = 321},
-            //        new InnerFoo {Name = "j2", Int32 = 12345, NullInt = 54321},
-            //        new InnerFoo {Name = "j3", Int32 = 12345, NullInt = 54321},
-            //    },
+            Foos = new List<InnerFoo>
+                {
+                    new InnerFoo {Name = "j1", Int64 = 123, NullInt = 321},
+                    new InnerFoo {Name = "j2", Int32 = 12345, NullInt = 54321},
+                    new InnerFoo {Name = "j3", Int32 = 12345, NullInt = 54321},
+                },
             FooArr = new[]
                 {
                     new InnerFoo {Name = "a1"},
@@ -56,8 +56,8 @@ namespace Benchmark.Flattening
         [Key(7)]
         public InnerFoo Foo1 { get; set; }
 
-        //[Key(8)]
-        //public List<InnerFoo> Foos { get; set; }
+        [Key(8)]
+        public List<InnerFoo> Foos { get; set; }
 
         [Key(9)]
         public InnerFoo[] FooArr { get; set; }

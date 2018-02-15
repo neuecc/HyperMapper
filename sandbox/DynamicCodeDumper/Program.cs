@@ -19,6 +19,7 @@ namespace DynamicCodeDumper
             try
             {
                 var info = MappingInfo.Create<Foo, Foo>();
+                var info2 = MappingInfo.Create<MyClassB, MyClassB>();
                 //var info2 = MappingInfo.Create<InnerFoo, InnerFooDest>();
                 //info.BeforeMap = x => Console.WriteLine(x.MyProperty);
                 //info.AfterMap = x => Console.WriteLine(x.MyProperty3);
@@ -31,6 +32,7 @@ namespace DynamicCodeDumper
 
 
                 info.BuildMapper();
+                info2.BuildMapper();
                 // info2.BuildMapper();
 
                 // DynamicObjectResolver.Default.GetMapper<MyClassA, MyClassB>();

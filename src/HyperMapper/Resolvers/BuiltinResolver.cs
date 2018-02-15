@@ -71,20 +71,19 @@ namespace HyperMapper.Resolvers
                 {typeof(decimal?),        new ReturnSelfMapper<decimal?>()},
 
                 // Primitive Array
-                {typeof(Int16[]),  new BlockCopyMapper<Int16>(sizeof(Int16))},
-                //{typeof(Int32[]),  new BlockCopyMapper<Int32>(sizeof(Int32))},
+                {typeof(Int16[]),  new Int16MemoryCopyMapper()},
                 {typeof(Int32[]),  new Int32MemoryCopyMapper()},
-                {typeof(Int64[]),  new BlockCopyMapper<Int64>(sizeof(Int64))},
-                {typeof(UInt16[]), new BlockCopyMapper<UInt16>(sizeof(UInt16))},
-                {typeof(UInt32[]), new BlockCopyMapper<UInt32>(sizeof(UInt32))},
-                {typeof(UInt64[]), new BlockCopyMapper<UInt64>(sizeof(UInt64))},
-                {typeof(Single[]), new BlockCopyMapper<Single>(sizeof(Single))},
-                {typeof(Double[]), new BlockCopyMapper<Double>(sizeof(Double))},
-                {typeof(bool[]),   new BlockCopyMapper<bool>(sizeof(bool))},
-                {typeof(byte[]),   new BlockCopyMapper<byte>(sizeof(byte))},
-                {typeof(sbyte[]),  new BlockCopyMapper<sbyte>(sizeof(sbyte))},
-                {typeof(char[]),   new BlockCopyMapper<char>(sizeof(char))},
-                {typeof(decimal[]),new BlockCopyMapper<decimal>(sizeof(decimal))},
+                {typeof(Int64[]),  new Int64MemoryCopyMapper()},
+                {typeof(UInt16[]), new UInt16MemoryCopyMapper()},
+                {typeof(UInt32[]), new UInt32MemoryCopyMapper()},
+                {typeof(UInt64[]), new UInt64MemoryCopyMapper()},
+                {typeof(Single[]), new SingleMemoryCopyMapper()},
+                {typeof(Double[]), new DoubleMemoryCopyMapper()},
+                {typeof(bool[]),   new BooleanMemoryCopyMapper()},
+                {typeof(byte[]),   new ByteMemoryCopyMapper()},
+                {typeof(sbyte[]),  new SByteMemoryCopyMapper()},
+                {typeof(char[]),   new CharMemoryCopyMapper()},
+                {typeof(decimal[]),new DecimalMemoryCopyMapper()},
 
                 // Primitive Nullable Array
                 {typeof(Nullable<Int16>[]),  new ShallowCopyArrayMapper<Int16?>()},
@@ -209,6 +208,10 @@ namespace HyperMapper.Resolvers
                         return CreateGenericReturnSelfMapper(from);
                     }
                 }
+
+                // must be before TryCreateNullableMapper
+                mapper = TryCreateParseMapper(from, to);
+                if (mapper != null) return mapper;
 
                 mapper = TryCreateNullableMapper(from, to);
                 if (mapper != null) return mapper;
@@ -342,7 +345,16 @@ namespace HyperMapper.Resolvers
             {
                 if (from != typeof(string)) return null;
 
-                // if(to
+                if (parseMapperMap.TryGetValue(to, out var formatter))
+                {
+                    return formatter;
+                }
+                else if (nullableParseMapperMap.TryGetValue(to, out formatter))
+                {
+                    return formatter;
+                }
+
+                return null;
             }
 
             static object TryCreateWellKnownGenericTypeMapper(Type from, Type to)

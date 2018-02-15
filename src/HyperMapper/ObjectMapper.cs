@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace HyperMapper
 {
@@ -42,12 +43,14 @@ namespace HyperMapper
             defaultResolver = resolver;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T DeepCopy<T>(T cloneFrom)
         {
             var resolver = DefaultResolver;
             return resolver.GetMapperWithVerify<T, T>().Map(cloneFrom, resolver);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TTo Map<TFrom, TTo>(TFrom from)
         {
             var resolver = DefaultResolver;

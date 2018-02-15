@@ -1,0 +1,69 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+<#
+    var types = new[]
+    {
+        typeof(sbyte),
+        typeof(Int16),
+        typeof(Int32),
+        typeof(Int64),
+        typeof(byte), 
+        typeof(UInt16),
+        typeof(UInt32),
+        typeof(UInt64),
+        typeof(Single),
+        typeof(Double),
+        typeof(bool), 
+        typeof(char),
+        typeof(decimal), 
+    };
+#>
+using System;
+using HyperMapper;
+using System.Runtime.CompilerServices;
+
+namespace HyperMapper.Mappers
+{
+<# foreach(var t in types) {  #>
+    public sealed unsafe class <#= t.Name #>MemoryCopyMapper : IObjectMapper<<#= t.Name #>[], <#= t.Name #>[]>
+    {
+        const int ElementMemorySize = sizeof(<#= t.Name #>);
+
+        public <#= t.Name #>[] Map(<#= t.Name #>[] from, IObjectMapperResolver resolver)
+        {
+            if (from == null) return null;
+
+            var newArray = new <#= t.Name #>[from.Length];
+            ulong len = (ulong)from.Length * ElementMemorySize;
+            fixed (void* src = from)
+            fixed (void* dest = newArray)
+            {
+                Buffer.MemoryCopy(src, dest, len, len);
+            }
+
+            return newArray;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static <#= t.Name #>[] Map(<#= t.Name #>[] from)
+        {
+            if (from == null) return null;
+
+            var newArray = new <#= t.Name #>[from.Length];
+            ulong len = (ulong)from.Length * ElementMemorySize;
+            fixed (void* src = from)
+            fixed (void* dest = newArray)
+            {
+                Buffer.MemoryCopy(src, dest, len, len);
+            }
+
+            return newArray;
+        }
+    }
+
+<# } #>
+}

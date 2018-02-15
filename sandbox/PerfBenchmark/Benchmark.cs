@@ -17,6 +17,12 @@ namespace PerfBenchmark
     {
         static Foo _foo;
 
+        static int[] testArray = new[] { 1, 10, 100, 1000, 2000, 99999 };
+        // static int[] testArray = Enumerable.Range(1, 1000).ToArray();
+        static HyperMapper.IObjectMapper<int[], int[]> blockcopyMapper = new HyperMapper.Mappers.BlockCopyMapper<int>(sizeof(int));
+        static HyperMapper.IObjectMapper<int[], int[]> arraycopyMapper = new HyperMapper.Mappers.ShallowCopyArrayMapper<int>();
+        static HyperMapper.IObjectMapper<int[], int[]> memorycopyMapper = new HyperMapper.Mappers.Int32MemoryCopyMapper();
+
         static MapBenchmark()
         {
             Mapper.Initialize(cfg =>
@@ -35,6 +41,27 @@ namespace PerfBenchmark
             //global::Nelibur.ObjectMapper.TinyMapper.Bind<Foo, Foo>();
             //global::Nelibur.ObjectMapper.TinyMapper.Bind<InnerFoo, InnerFoo>();
         }
+
+
+
+        //[Benchmark]
+        //public int[] MemoryCopy()
+        //{
+        //    return memorycopyMapper.Map(testArray, null);
+        //}
+
+        //[Benchmark]
+        //public int[] BlockCopy()
+        //{
+        //    return blockcopyMapper.Map(testArray, null);
+        //}
+
+        //[Benchmark]
+        //public int[] ArrayCopy()
+        //{
+        //    return arraycopyMapper.Map(testArray, null);
+        //}
+
 
 
         [Benchmark(Baseline = true)]

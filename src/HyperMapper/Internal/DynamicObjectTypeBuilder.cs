@@ -76,14 +76,36 @@ namespace HyperMapper.Internal
             {typeof(char)},
             {typeof(decimal)},
             {typeof(string)},
-            {typeof(int?)},
             {typeof(DateTime)},
+            {typeof(TimeSpan)},
+            {typeof(DateTimeOffset)},
+            {typeof(Guid)},
+
+            {typeof(short?)},
+            {typeof(int?)},
+            {typeof(long?)},
+            {typeof(ushort?)},
+            {typeof(uint?)},
+            {typeof(ulong?)},
+            {typeof(float?)},
+            {typeof(double?)},
+            {typeof(bool?)},
+            {typeof(byte?)},
+            {typeof(sbyte?)},
+            {typeof(char?)},
+            {typeof(decimal?)},
+            {typeof(DateTime?)},
+            {typeof(TimeSpan?)},
+            {typeof(DateTimeOffset?)},
+            {typeof(Guid?)},
         };
 
         public static object BuildMapperFromType<TFrom, TTo>(Func<string, string> nameMutator)
         {
             var mappingInfo = MappingInfo.Create<TFrom, TTo>(nameMutator);
-            return DynamicObjectTypeBuilder.BuildMapper<TFrom, TTo>(mappingInfo);
+            return DynamicObjectTypeBuilder.BuildMapperToAssembly<TFrom, TTo>(mappingInfo);
+
+            //return DynamicObjectTypeBuilder.BuildMapperToDynamicMethod<TFrom, TTo>(mappingInfo);
         }
 
         static object HandleNullable(Type from, Type to)
@@ -122,7 +144,7 @@ namespace HyperMapper.Internal
             return null;
         }
 
-        internal static object BuildMapper<TFrom, TTo>(MappingInfo<TFrom, TTo> mappingInfo)
+        internal static object BuildMapperToAssembly<TFrom, TTo>(MappingInfo<TFrom, TTo> mappingInfo)
         {
             var fromType = typeof(TFrom);
             var toType = typeof(TTo);
@@ -168,6 +190,29 @@ namespace HyperMapper.Internal
 
             var typeInfo = typeBuilder.CreateTypeInfo();
             return Activator.CreateInstance(typeInfo, new object[] { mappingInfo.BeforeMap, mappingInfo.AfterMap }.Concat(ctorConvertActions).ToArray());
+        }
+
+        internal static object BuildMapperToDynamicMethod<TFrom, TTo>(MappingInfo<TFrom, TTo> mappingInfo)
+        {
+            var fromType = typeof(TFrom);
+            var toType = typeof(TTo);
+
+            if (ignoreTypes.Contains(fromType)) return null;
+            if (ignoreTypes.Contains(toType)) return null;
+
+            // TTo Map(TFrom from, IObjectMapperResolver resolver);
+            {
+                // TODo:beforeAction, toAction...
+
+                var method = new DynamicMethod("Map", toType, new[] { typeof(object[]), fromType, typeof(IObjectMapperResolver) }, fromType.Module, true);
+                var il = method.GetILGenerator();
+                BuildMap(il, mappingInfo, 1, null, null, new Dictionary<MetaMemberPair<TFrom, TTo>, FieldBuilder>()); // TODO:convert fields...
+
+                var delgate = method.CreateDelegate(typeof(Func<,,,>).MakeGenericType(typeof(object[]), fromType, typeof(IObjectMapperResolver), toType));
+
+                // TODO:converts
+                return Activator.CreateInstance(typeof(DynamicMethodMapper<,>).MakeGenericType(fromType, toType), new object[] { null, delgate });
+            }
         }
 
         static void BuildConstructor<TFrom, TTo>(ILGenerator il, MappingInfo<TFrom, TTo> mappingInfo, FieldBuilder beforeMapField, FieldBuilder afterMapField, TypeBuilder typeBuilder, MetaMemberPair<TFrom, TTo>[] convertActions, out Dictionary<MetaMemberPair<TFrom, TTo>, FieldBuilder> convertActionDictionary)
@@ -219,6 +264,17 @@ namespace HyperMapper.Internal
                 emitBeforeMapLoadDelegate();
                 argFrom.EmitLdarg();
                 il.EmitCall(EmitInfo.GetActionInvoke<TFrom>());
+            }
+
+            // if(from == null) return null
+            if (!fromType.IsValueType)
+            {
+                var gotoNextLabel = il.DefineLabel();
+                argFrom.EmitLoad();
+                il.Emit(OpCodes.Brtrue_S, gotoNextLabel);
+                il.Emit(OpCodes.Ldnull);
+                il.Emit(OpCodes.Ret);
+                il.MarkLabel(gotoNextLabel);
             }
 
             // construct totype
@@ -313,7 +369,7 @@ namespace HyperMapper.Internal
             }
             else
             {
-                // optimize for primitive to primitive and primitive[] to primitive[]
+                // optimize for primitive to primitive
                 if (pair.From.Type == pair.To.Type)
                 {
                     if (optimizeInliningType.Contains(pair.To.Type))
@@ -346,11 +402,13 @@ namespace HyperMapper.Internal
                         return;
                     }
 
-                    // more aggressive inlining for wellknown collections
+                    // more aggressive inlining for primitive[]
                     if (pair.To.Type.IsArray)
                     {
-                        // TODO:other primitive types...
-                        if (pair.To.Type.GetElementType() == typeof(int))
+                        var elemType = pair.To.Type.GetElementType();
+                        var mapMethodInfo = EmitInfo.GetMemoryCopyMapperMap(elemType);
+
+                        if (mapMethodInfo != null)
                         {
                             il.EmitLdloc(toLocal);
 
@@ -363,35 +421,7 @@ namespace HyperMapper.Internal
 
                             argFrom.EmitLoad();
                             pair.From.EmitLoadValue(il);
-
-                            var from = il.DeclareLocal(typeof(Int32[]));
-                            il.EmitStloc(from);
-
-                            var gotoNoNull = il.DefineLabel();
-                            var gotoEnd = il.DefineLabel();
-
-                            il.EmitLdloc(from);
-                            il.Emit(OpCodes.Brtrue, gotoNoNull);
-                            il.Emit(OpCodes.Ldnull);
-                            il.Emit(OpCodes.Br, gotoEnd);
-                            il.MarkLabel(gotoNoNull);
-
-                            var dest = il.DeclareLocal(typeof(Int32[]));
-                            il.EmitLdloc(from);
-                            il.Emit(OpCodes.Ldlen);
-                            il.Emit(OpCodes.Conv_I4);
-                            il.Emit(OpCodes.Newarr, typeof(Int32));
-                            il.EmitStloc(dest);
-
-                            il.EmitLdloc(from);
-                            il.EmitLdloc(dest);
-                            il.EmitLdloc(from);
-                            il.Emit(OpCodes.Ldlen);
-                            il.Emit(OpCodes.Conv_I4);
-                            il.EmitCall(ExpressionUtility.GetMethodInfo(() => Array.Copy(null, null, 0)));
-
-                            il.EmitLdloc(dest);
-                            il.MarkLabel(gotoEnd);
+                            il.EmitCall(mapMethodInfo);
 
                             if (convertField != null)
                             {
@@ -451,6 +481,92 @@ namespace HyperMapper.Internal
 
             public static MethodInfo GetFuncInvoke<T1, T2>() => ExpressionUtility.GetMethodInfo((Func<T1, T2> f) => f.Invoke(default(T1)));
             public static MethodInfo GetFuncInvokeDynamic(Type t1, Type t2) => typeof(Func<,>).MakeGenericType(t1, t2).GetMethod("Invoke");
+
+            public static MethodInfo GetMemoryCopyMapperMap(Type elementType)
+            {
+                switch (Type.GetTypeCode(elementType))
+                {
+                    case TypeCode.Boolean:
+                        return ExpressionUtility.GetMethodInfo(() => BooleanMemoryCopyMapper.Map(null));
+                    case TypeCode.Char:
+                        return ExpressionUtility.GetMethodInfo(() => CharMemoryCopyMapper.Map(null));
+                    case TypeCode.SByte:
+                        return ExpressionUtility.GetMethodInfo(() => SByteMemoryCopyMapper.Map(null));
+                    case TypeCode.Byte:
+                        return ExpressionUtility.GetMethodInfo(() => ByteMemoryCopyMapper.Map(null));
+                    case TypeCode.Int16:
+                        return ExpressionUtility.GetMethodInfo(() => Int16MemoryCopyMapper.Map(null));
+                    case TypeCode.UInt16:
+                        return ExpressionUtility.GetMethodInfo(() => UInt16MemoryCopyMapper.Map(null));
+                    case TypeCode.Int32:
+                        return ExpressionUtility.GetMethodInfo(() => Int32MemoryCopyMapper.Map(null));
+                    case TypeCode.UInt32:
+                        return ExpressionUtility.GetMethodInfo(() => UInt32MemoryCopyMapper.Map(null));
+                    case TypeCode.Int64:
+                        return ExpressionUtility.GetMethodInfo(() => Int64MemoryCopyMapper.Map(null));
+                    case TypeCode.UInt64:
+                        return ExpressionUtility.GetMethodInfo(() => UInt64MemoryCopyMapper.Map(null));
+                    case TypeCode.Single:
+                        return ExpressionUtility.GetMethodInfo(() => SingleMemoryCopyMapper.Map(null));
+                    case TypeCode.Double:
+                        return ExpressionUtility.GetMethodInfo(() => DoubleMemoryCopyMapper.Map(null));
+                    case TypeCode.Decimal:
+                        return ExpressionUtility.GetMethodInfo(() => DecimalMemoryCopyMapper.Map(null));
+                    default:
+                        return null;
+                }
+
+            }
+        }
+
+        internal sealed class DynamicMethodWithActionMapper<TFrom, TTo> : IObjectMapper<TFrom, TTo>
+        {
+            readonly Action<TFrom> fromAction;
+            readonly Action<TTo> toAction;
+            readonly object[] converts;
+            readonly Func<object[], TFrom, IObjectMapperResolver, TTo> map;
+
+            public DynamicMethodWithActionMapper(Action<TFrom> fromAction, Action<TTo> toAction, object[] converts, Func<object[], TFrom, IObjectMapperResolver, TTo> map)
+            {
+                this.fromAction = fromAction;
+                this.toAction = toAction;
+                this.converts = converts;
+                this.map = map;
+            }
+
+            public TTo Map(TFrom from, IObjectMapperResolver resolver)
+            {
+                if (fromAction != null)
+                {
+                    fromAction(from);
+                }
+
+                var result = map(converts, from, resolver);
+
+                if (toAction != null)
+                {
+                    toAction(result);
+                }
+
+                return result;
+            }
+        }
+
+        internal sealed class DynamicMethodMapper<TFrom, TTo> : IObjectMapper<TFrom, TTo>
+        {
+            readonly object[] converts;
+            readonly Func<object[], TFrom, IObjectMapperResolver, TTo> map;
+
+            public DynamicMethodMapper(object[] converts, Func<object[], TFrom, IObjectMapperResolver, TTo> map)
+            {
+                this.converts = converts;
+                this.map = map;
+            }
+
+            public TTo Map(TFrom from, IObjectMapperResolver resolver)
+            {
+                return map(converts, from, resolver);
+            }
         }
     }
 }

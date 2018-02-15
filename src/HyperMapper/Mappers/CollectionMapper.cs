@@ -41,48 +41,6 @@ namespace HyperMapper.Mappers
         }
     }
 
-    // TODO:more faster?
-    public sealed unsafe class Int32MemoryCopyMapper : IObjectMapper<int[], int[]>
-    {
-        const int elementMemorySize = sizeof(int);
-
-        public int[] Map(int[] from, IObjectMapperResolver resolver)
-        {
-            if (from == null) return null;
-
-            var newArray = new int[from.Length];
-            long len = from.Length * elementMemorySize;
-            fixed (void* src = from)
-            fixed (void* dest = newArray)
-            {
-                Buffer.MemoryCopy(src, dest, len, len);
-
-            }
-            return newArray;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int[] Map(int[] from)
-        {
-            if (from == null) return null;
-
-            var newArray = new int[from.Length];
-            for (int i = 0; i < newArray.Length; i++)
-            {
-                newArray[i] = from[i];
-            }
-
-            //long len = from.Length * elementMemorySize;
-            //fixed (void* src = from)
-            //fixed (void* dest = newArray)
-            //{
-            //    Buffer.MemoryCopy(src, dest, len, len);
-
-            //}
-            return newArray;
-        }
-    }
-
     public sealed class ArrayMapper<TFrom, TTo> : IObjectMapper<TFrom[], TTo[]>
     {
         public TTo[] Map(TFrom[] obj, IObjectMapperResolver resolver)

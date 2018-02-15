@@ -18,7 +18,7 @@ namespace HyperMapper
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IObjectMapper<TFrom, TTo> GetMapperWithVerify<TFrom, TTo>(this IObjectMapperResolver resolver)
-        {
+        {            
             IObjectMapper<TFrom, TTo> mapper = null;
             try
             {
