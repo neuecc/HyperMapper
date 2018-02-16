@@ -3,53 +3,79 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HyperMapper.Internal;
 
 namespace HyperMapper.Mappers
 {
-    // TODO:Any more more...
-
-
-    public sealed class DictionaryMapper<TKey, TValue> : IObjectMapper<Dictionary<TKey, TValue>, Dictionary<TKey, TValue>>
+    public abstract class DictionaryMapperrBase<TFromDictionary, TFromKey, TFromValue, TFromEnumerator, TToIntermediate, TToDictionary, TToKey, TToValue>
+        where TFromDictionary : class, IDictionary<TFromKey, TFromValue>
+        where TFromEnumerator : IEnumerator<KeyValuePair<TFromKey, TFromValue>>
+        where TToDictionary : class, IEnumerable<KeyValuePair<TToKey, TToValue>>
     {
-        public Dictionary<TKey, TValue> Map(Dictionary<TKey, TValue> obj, IObjectMapperResolver resolver)
+        protected abstract TFromEnumerator GetSourceEnumerator(TFromDictionary source);
+        protected abstract TToIntermediate Create(TFromDictionary from);
+        protected abstract void Add(ref TToIntermediate collection, int index, TToKey key, TToValue value);
+        protected abstract TToDictionary Complete(ref TToIntermediate intermediateCollection);
+
+        public TToDictionary Map(TFromDictionary from, IObjectMapperResolver resolver)
         {
-            if (obj == null) return null;
+            if (from == null) return null;
 
-            var dict = new Dictionary<TKey, TValue>(obj.Count, obj.Comparer);
+            var keyMapper = resolver.GetMapperWithVerify<TFromKey, TToKey>();
+            var valueMapper = resolver.GetMapperWithVerify<TFromValue, TToValue>();
 
-            var keyMapper = resolver.GetMapperWithVerify<TKey, TKey>();
-            var valueMapper = resolver.GetMapperWithVerify<TValue, TValue>();
+            var builder = Create(from);
 
-            foreach (var item in obj)
+            using (var e = GetSourceEnumerator(from))
             {
-                var key = keyMapper.Map(item.Key, resolver);
-                var value = valueMapper.Map(item.Value, resolver);
-                dict.Add(key, value);
+                var index = 0;
+                while (e.MoveNext())
+                {
+                    var key = keyMapper.Map(e.Current.Key, resolver);
+                    var value = valueMapper.Map(e.Current.Value, resolver);
+                    Add(ref builder, index, key, value);
+                    index++;
+                }
             }
 
-            return dict;
+            return Complete(ref builder);
         }
     }
 
-    public sealed class DictionaryMapper<TFromTKey, TFromTValue, TToKey, TToValue> : IObjectMapper<IDictionary<TFromTKey, TFromTValue>, Dictionary<TToKey, TToValue>>
+    public class DictionaryMapper<TFromKey, TFromValue, TToKey, TToValue> : DictionaryMapperrBase<Dictionary<TFromKey, TFromValue>, TFromKey, TFromValue, Dictionary<TFromKey, TFromValue>.Enumerator, Dictionary<TToKey, TToValue>, Dictionary<TToKey, TToValue>, TToKey, TToValue>
     {
-        public Dictionary<TToKey, TToValue> Map(IDictionary<TFromTKey, TFromTValue> obj, IObjectMapperResolver resolver)
+        protected IEqualityComparer<TToKey> EqualityComparer { get; }
+
+        protected override void Add(ref Dictionary<TToKey, TToValue> collection, int index, TToKey key, TToValue value)
         {
-            if (obj == null) return null;
+            collection.Add(key, value);
+        }
 
-            var dict = new Dictionary<TToKey, TToValue>(obj.Count); // equality comparer?
+        protected override Dictionary<TToKey, TToValue> Complete(ref Dictionary<TToKey, TToValue> intermediateCollection)
+        {
+            return intermediateCollection;
+        }
 
-            var keyMapper = resolver.GetMapperWithVerify<TFromTKey, TToKey>();
-            var valueMapper = resolver.GetMapperWithVerify<TFromTValue, TToValue>();
+        protected override Dictionary<TToKey, TToValue> Create(Dictionary<TFromKey, TFromValue> from)
+        {
+            return new Dictionary<TToKey, TToValue>(from.Count, EqualityComparer);
+        }
 
-            foreach (var item in obj)
-            {
-                var key = keyMapper.Map(item.Key, resolver);
-                var value = valueMapper.Map(item.Value, resolver);
-                dict.Add(key, value);
-            }
-
-            return dict;
+        protected override Dictionary<TFromKey, TFromValue>.Enumerator GetSourceEnumerator(Dictionary<TFromKey, TFromValue> source)
+        {
+            return source.GetEnumerator();
         }
     }
+
+    public class DictionaryMapper<TKey, TValue> : DictionaryMapper<TKey, TValue, TKey, TValue>
+    {
+        protected override Dictionary<TKey, TValue> Create(Dictionary<TKey, TValue> from)
+        {
+            return new Dictionary<TKey, TValue>(from.Count, from.Comparer);
+        }
+    }
+
+
+
+
 }

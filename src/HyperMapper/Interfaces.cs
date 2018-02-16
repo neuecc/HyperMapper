@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 
 namespace HyperMapper
 {
@@ -45,7 +46,7 @@ namespace HyperMapper
                 inner = inner.InnerException;
             }
 
-            throw inner;
+            ExceptionDispatchInfo.Capture(inner).Throw();
         }
 
         static void ThrowWhenNull<TFrom, TTo>(IObjectMapperResolver resolver)

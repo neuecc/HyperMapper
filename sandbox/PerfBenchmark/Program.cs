@@ -30,18 +30,30 @@ class Program
 
 #if DEBUG
 
-        //var _foo = Foo.New();
-        //var hee = StandardResolver.Default.GetMapper<Foo, Foo>().Map(_foo, StandardResolver.Default);
+        //IHee hee = new Hee() { MyProperty = 9999 };
 
-        var ex = new ArgumentException();
-        var foo = ObjectMapper.Map<Exception, Exception>(ex);
-        // new ReturnSelfMapper<Exception, ArgumentException>();
-         Console.WriteLine(foo);
+        IComparable<Int32> x = 99;
+        var y = (int)x;
+
+         // var foo = ObjectMapper.Map<IComparable<Int32>, Int32>(9999);
+
+        // Console.WriteLine(foo);
+
 
 #else
         switcher.Run(args);
 #endif
     }
+}
+
+public class Hee : IHee
+{
+    public int MyProperty { get; set; }
+}
+
+public interface IHee
+{
+    int MyProperty { get; }
 }
 
 public class BenchmarkConfig : ManualConfig

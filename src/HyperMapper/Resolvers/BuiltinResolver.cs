@@ -9,6 +9,7 @@ using System.Text;
 using System.Collections;
 using System.Dynamic;
 using System.Collections.ObjectModel;
+using System.Collections.Concurrent;
 
 namespace HyperMapper.Resolvers
 {
@@ -150,6 +151,14 @@ namespace HyperMapper.Resolvers
                 { typeof(ReadOnlyCollection<>), (typeof(ReadOnlyCollectionMapper<,>), typeof(ReadOnlyCollectionMapper<,,>)) },
                 { typeof(IList<>), (typeof(InterfaceListMapper<,>), typeof(InterfaceListMapper<,,>)) },
                 { typeof(ICollection<>), (typeof(InterfaceCollectionMapper<,>), typeof(InterfaceCollectionMapper<,,>)) },
+                { typeof(ObservableCollection<>), (typeof(ObservableCollectionMapper<,>), typeof(ObservableCollectionMapper<,,>)) },
+                { typeof(ReadOnlyObservableCollection<>), (typeof(ReadOnlyObservableCollectionMapper<,>), typeof(ReadOnlyObservableCollectionMapper<,,>)) },
+                { typeof(IReadOnlyList<>), (typeof(InterfaceReadOnlyListMapper<,>), typeof(InterfaceReadOnlyListMapper<,,>)) },
+                { typeof(IReadOnlyCollection<>), (typeof(InterfaceReadOnlyCollectionMapper<,>), typeof(InterfaceReadOnlyCollectionMapper<,,>)) },
+                { typeof(ISet<>), (typeof(InterfaceSetMapper<,>), typeof(InterfaceSetMapper<,,>)) },
+                { typeof(ConcurrentBag<>), (typeof(ConcurrentBagMapper<,>), typeof(ConcurrentBagMapper<,,>)) },
+                { typeof(ConcurrentQueue<>), (typeof(ConcurrentQueueMapper<,>), typeof(ConcurrentQueueMapper<,,>)) },
+                { typeof(ConcurrentStack<>), (typeof(ConcurrentStackMapper<,>), typeof(ConcurrentStackMapper<,,>)) },
             };
 
             static readonly Dictionary<Type, object> parseMapperMap = new Dictionary<Type, object>
@@ -223,6 +232,9 @@ namespace HyperMapper.Resolvers
                 mapper = TryCreatePrimitiveToPrimitiveMapper(from, to);
                 if (mapper != null) return mapper;
 
+                mapper = TryCreateToStringMapper(from, to);
+                if (mapper != null) return mapper;
+
                 mapper = TryCreateWellKnownGenericTypeMapper(from, to);
                 if (mapper != null) return mapper;
 
@@ -235,7 +247,8 @@ namespace HyperMapper.Resolvers
                 mapper = TryCreateExceptionMapper(from, to);
                 if (mapper != null) return mapper;
 
-                // TODO:object mapper?
+                mapper = TryCreateObjectMapper(from, to);
+                if (mapper != null) return mapper;
 
                 return null;
             }
@@ -328,14 +341,6 @@ namespace HyperMapper.Resolvers
                     {
                         return PrimitiveConvertMapper.Build(from, to);
                     }
-                    else
-                    {
-                        throw new NotSupportedException("Primitive to X mapping does not supported.");
-                    }
-                }
-                else if (PrimitiveConvertMapper.IsPrimitive(to))
-                {
-                    throw new NotSupportedException("X to Primitive mapping does not supported.");
                 }
 
                 return null;
@@ -494,7 +499,7 @@ namespace HyperMapper.Resolvers
 
                 if (to.IsGenericType)
                 {
-                    if (!from.IsArray && !from.IsGenericType) throw new NotSupportedException("NonGenericCollection to GenericCollection does not supported.");
+                    if (!from.IsArray && !from.IsGenericType) return null;
 
                     // generic collection
                     var fromDef = (from.IsArray) ? null : from.GetGenericTypeDefinition();
@@ -519,14 +524,41 @@ namespace HyperMapper.Resolvers
                             return Activator.CreateInstance(mapperType.fromEnumerable.MakeGenericType(from, fromElement, toElement));
                         }
                     }
+
+                    // TODO:check dictionary before build collection...?
+
+                    // GenericCollectionMapper
+                    if (typeof(IEnumerable<>).MakeGenericType(fromElement).IsAssignableFrom(from) && typeof(ICollection<>).MakeGenericType(toElement).IsAssignableFrom(to))
+                    {
+                        return Activator.CreateInstance(typeof(GenericCollectionMapper<,,,>).MakeGenericType(from, fromElement, toElement, to));
+                    }
                 }
                 else
                 {
-                    // nongeneric collection?
+                    // nongeneric collection
+                    if (typeof(IEnumerable).IsAssignableFrom(from))
+                    {
+                        if (to == typeof(IList))
+                        {
+                            return Activator.CreateInstance(typeof(NonGenericInterfaceListMapper<>).MakeGenericType(from));
+                        }
+                        else if (to == typeof(ICollection))
+                        {
+                            return Activator.CreateInstance(typeof(NonGenericInterfaceCollectionMapper<>).MakeGenericType(from));
+                        }
+                        else if (to == typeof(IEnumerable))
+                        {
+                            return Activator.CreateInstance(typeof(NonGenericInterfaceEnumerableMapper<>).MakeGenericType(from));
+                        }
+                        else
+                        {
+                            if (typeof(IList).IsAssignableFrom(to))
+                            {
+                                return Activator.CreateInstance(typeof(NonGenericListMapper<,>).MakeGenericType(from, to));
+                            }
+                        }
+                    }
                 }
-
-                // // TODO:GenericCollectionMapper
-
 
                 return null;
             }
@@ -540,6 +572,29 @@ namespace HyperMapper.Resolvers
                     {
                         return Activator.CreateInstance(typeof(ReturnSelfMapper<,>).MakeGenericType(from, to));
                     }
+                }
+
+                return null;
+            }
+
+            static object TryCreateObjectMapper(Type from, Type to)
+            {
+                if ((to == typeof(object) || to.IsInterface || to.IsAbstract))
+                {
+                    if (to.IsAssignableFrom(from))
+                    {
+                        return Activator.CreateInstance(typeof(ConcreteTypeMapper<,>).MakeGenericType(from, to));
+                    }
+                }
+
+                return null;
+            }
+
+            static object TryCreateToStringMapper(Type from, Type to)
+            {
+                if (to == typeof(String))
+                {
+                    return Activator.CreateInstance(typeof(ToStringMapper<>).MakeGenericType(from));
                 }
 
                 return null;

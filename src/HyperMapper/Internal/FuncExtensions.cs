@@ -10,6 +10,11 @@ namespace HyperMapper.Internal
             return new Func<T>(value.ReturnBox<T>);
         }
 
+        public static Func<TIgnore, T> AsFunc2<TIgnore, T>(this T value)
+        {
+            return new Func<TIgnore, T>(value.ReturnBox2<TIgnore, T>);
+        }
+
         public static Func<T> AsFuncFast<T>(this T value) where T : class
         {
             return new Func<T>(value.Return<T>);
@@ -21,6 +26,11 @@ namespace HyperMapper.Internal
         }
 
         static T ReturnBox<T>(this object value)
+        {
+            return (T)value;
+        }
+
+        static T ReturnBox2<TIgnore, T>(this object value, TIgnore _)
         {
             return (T)value;
         }

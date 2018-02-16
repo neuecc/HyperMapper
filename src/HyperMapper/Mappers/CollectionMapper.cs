@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using System.Collections.Concurrent;
 
 namespace HyperMapper.Mappers
 {
@@ -542,13 +543,259 @@ namespace HyperMapper.Mappers
         }
     }
 
+    public sealed class ObservableCollectionMapper<TFrom, TTo> : ObservableCollectionMapper<ObservableCollection<TFrom>, TFrom, TTo>
+    {
+    }
 
+    public class ObservableCollectionMapper<TFromCollection, TFrom, TTo> : CollectionMapperBase<TFromCollection, TFrom, TTo, ObservableCollection<TTo>, ObservableCollection<TTo>>
+        where TFromCollection : class, IEnumerable<TFrom>
+    {
+        protected override void Add(ref ObservableCollection<TTo> collection, int index, TTo value)
+        {
+            collection.Add(value);
+        }
+
+        protected override ObservableCollection<TTo> Complete(ref ObservableCollection<TTo> intermediateCollection)
+        {
+            return intermediateCollection;
+        }
+
+        protected override ObservableCollection<TTo> Create(int? count)
+        {
+            return new ObservableCollection<TTo>();
+        }
+    }
+
+    public sealed class ReadOnlyObservableCollectionMapper<TFrom, TTo> : ObservableCollectionMapper<ObservableCollection<TFrom>, TFrom, TTo>
+    {
+    }
+
+    public class ReadOnlyObservableCollectionMapper<TFromCollection, TFrom, TTo> : CollectionMapperBase<TFromCollection, TFrom, TTo, ObservableCollection<TTo>, ReadOnlyObservableCollection<TTo>>
+        where TFromCollection : class, IEnumerable<TFrom>
+    {
+        protected override void Add(ref ObservableCollection<TTo> collection, int index, TTo value)
+        {
+            collection.Add(value);
+        }
+
+        protected override ReadOnlyObservableCollection<TTo> Complete(ref ObservableCollection<TTo> intermediateCollection)
+        {
+            return new ReadOnlyObservableCollection<TTo>(intermediateCollection);
+        }
+
+        protected override ObservableCollection<TTo> Create(int? count)
+        {
+            return new ObservableCollection<TTo>();
+        }
+    }
+
+    public class InterfaceReadOnlyListMapper<TFrom, TTo> : InterfaceReadOnlyListMapper<IReadOnlyList<TFrom>, TFrom, TTo>
+    {
+    }
+
+    public class InterfaceReadOnlyListMapper<TFromCollection, TFrom, TTo> : CollectionMapperBase<TFromCollection, TFrom, TTo, ArrayBuffer<TTo>, IReadOnlyList<TTo>>
+        where TFromCollection : class, IEnumerable<TFrom>
+    {
+        protected override void Add(ref ArrayBuffer<TTo> collection, int index, TTo value)
+        {
+            collection.Add(value);
+        }
+
+        protected override IReadOnlyList<TTo> Complete(ref ArrayBuffer<TTo> intermediateCollection)
+        {
+            return intermediateCollection.ToArray();
+        }
+
+        protected override ArrayBuffer<TTo> Create(int? count)
+        {
+            return new ArrayBuffer<TTo>(count ?? 4);
+        }
+    }
+
+    public class InterfaceReadOnlyCollectionMapper<TFrom, TTo> : InterfaceReadOnlyCollectionMapper<IReadOnlyCollection<TFrom>, TFrom, TTo>
+    {
+    }
+
+    public class InterfaceReadOnlyCollectionMapper<TFromCollection, TFrom, TTo> : CollectionMapperBase<TFromCollection, TFrom, TTo, ArrayBuffer<TTo>, IReadOnlyCollection<TTo>>
+        where TFromCollection : class, IEnumerable<TFrom>
+    {
+        protected override void Add(ref ArrayBuffer<TTo> collection, int index, TTo value)
+        {
+            collection.Add(value);
+        }
+
+        protected override IReadOnlyCollection<TTo> Complete(ref ArrayBuffer<TTo> intermediateCollection)
+        {
+            return intermediateCollection.ToArray();
+        }
+
+        protected override ArrayBuffer<TTo> Create(int? count)
+        {
+            return new ArrayBuffer<TTo>(count ?? 4);
+        }
+    }
+
+    public class InterfaceSetMapper<TFrom, TTo> : InterfaceSetMapper<IReadOnlyCollection<TFrom>, TFrom, TTo>
+    {
+    }
+
+    public class InterfaceSetMapper<TFromCollection, TFrom, TTo> : CollectionMapperBase<TFromCollection, TFrom, TTo, HashSet<TTo>, ISet<TTo>>
+        where TFromCollection : class, IEnumerable<TFrom>
+    {
+        protected IEqualityComparer<TTo> EqualityComparer { get; }
+
+        protected override void Add(ref HashSet<TTo> collection, int index, TTo value)
+        {
+            collection.Add(value);
+        }
+
+        protected override ISet<TTo> Complete(ref HashSet<TTo> intermediateCollection)
+        {
+            return intermediateCollection;
+        }
+
+        protected override HashSet<TTo> Create(int? count)
+        {
+            return new HashSet<TTo>(EqualityComparer ?? EqualityComparer<TTo>.Default);
+        }
+    }
+
+    public class ConcurrentBagMapper<TFrom, TTo> : ConcurrentBagMapper<ConcurrentBag<TFrom>, TFrom, TTo>
+    {
+    }
+
+    public class ConcurrentBagMapper<TFromCollection, TFrom, TTo> : CollectionMapperBase<TFromCollection, TFrom, TTo, ConcurrentBag<TTo>, ConcurrentBag<TTo>>
+        where TFromCollection : class, IEnumerable<TFrom>
+    {
+        protected override void Add(ref ConcurrentBag<TTo> collection, int index, TTo value)
+        {
+            collection.Add(value);
+        }
+
+        protected override ConcurrentBag<TTo> Complete(ref ConcurrentBag<TTo> intermediateCollection)
+        {
+            return intermediateCollection;
+        }
+
+        protected override ConcurrentBag<TTo> Create(int? count)
+        {
+            return new ConcurrentBag<TTo>();
+        }
+    }
+
+    public class ConcurrentQueueMapper<TFrom, TTo> : ConcurrentQueueMapper<ConcurrentQueue<TFrom>, TFrom, TTo>
+    {
+    }
+
+    public class ConcurrentQueueMapper<TFromCollection, TFrom, TTo> : CollectionMapperBase<TFromCollection, TFrom, TTo, ConcurrentQueue<TTo>, ConcurrentQueue<TTo>>
+        where TFromCollection : class, IEnumerable<TFrom>
+    {
+        protected override void Add(ref ConcurrentQueue<TTo> collection, int index, TTo value)
+        {
+            collection.Enqueue(value);
+        }
+
+        protected override ConcurrentQueue<TTo> Complete(ref ConcurrentQueue<TTo> intermediateCollection)
+        {
+            return intermediateCollection;
+        }
+
+        protected override ConcurrentQueue<TTo> Create(int? count)
+        {
+            return new ConcurrentQueue<TTo>();
+        }
+    }
+
+    public class ConcurrentStackMapper<TFrom, TTo> : ConcurrentStackMapper<ConcurrentStack<TFrom>, TFrom, TTo>
+    {
+    }
+
+    public class ConcurrentStackMapper<TFromCollection, TFrom, TTo> : CollectionMapperBase<TFromCollection, TFrom, TTo, ArrayBuffer<TTo>, ConcurrentStack<TTo>>
+        where TFromCollection : class, IEnumerable<TFrom>
+    {
+        protected override void Add(ref ArrayBuffer<TTo> collection, int index, TTo value)
+        {
+            collection.Add(value);
+        }
+
+        protected override ConcurrentStack<TTo> Complete(ref ArrayBuffer<TTo> intermediateCollection)
+        {
+            // should re-map reverse order.
+            var bufArray = intermediateCollection.Buffer;
+            var stack = new ConcurrentStack<TTo>();
+            for (int i = intermediateCollection.Size - 1; i >= 0; i--)
+            {
+                stack.Push(bufArray[i]);
+            }
+            return stack;
+        }
+
+        protected override ArrayBuffer<TTo> Create(int? count)
+        {
+            return new ArrayBuffer<TTo>(count ?? 4);
+        }
+    }
 
     // NonGenerics
 
+    public sealed class NonGenericListMapper<TFromCollection, TToCollection> : IObjectMapper<TFromCollection, TToCollection>
+        where TFromCollection : IEnumerable
+        where TToCollection : class, IList, new()
+    {
+        public TToCollection Map(TFromCollection from, IObjectMapperResolver resolver)
+        {
+            var mapper = resolver.GetMapperWithVerify<object, object>();
+            var list = new TToCollection();
+            foreach (var item in from)
+            {
+                list.Add(mapper.Map(item, resolver));
+            }
+            return list;
+        }
+    }
 
+    public sealed class NonGenericInterfaceEnumerableMapper<TFromCollection> : IObjectMapper<TFromCollection, IEnumerable>
+        where TFromCollection : IEnumerable
+    {
+        public IEnumerable Map(TFromCollection from, IObjectMapperResolver resolver)
+        {
+            var mapper = resolver.GetMapperWithVerify<object, object>();
+            var list = new List<object>();
+            foreach (var item in from)
+            {
+                list.Add(mapper.Map(item, resolver));
+            }
+            return list;
+        }
+    }
 
+    public sealed class NonGenericInterfaceCollectionMapper<TFromCollection> : IObjectMapper<TFromCollection, ICollection>
+        where TFromCollection : IEnumerable
+    {
+        public ICollection Map(TFromCollection from, IObjectMapperResolver resolver)
+        {
+            var mapper = resolver.GetMapperWithVerify<object, object>();
+            var list = new List<object>();
+            foreach (var item in from)
+            {
+                list.Add(mapper.Map(item, resolver));
+            }
+            return list;
+        }
+    }
 
-    // NET45...
-
+    public sealed class NonGenericInterfaceListMapper<TFromCollection> : IObjectMapper<TFromCollection, IList>
+        where TFromCollection : IEnumerable
+    {
+        public IList Map(TFromCollection from, IObjectMapperResolver resolver)
+        {
+            var mapper = resolver.GetMapperWithVerify<object, object>();
+            var list = new List<object>();
+            foreach (var item in from)
+            {
+                list.Add(mapper.Map(item, resolver));
+            }
+            return list;
+        }
+    }
 }
